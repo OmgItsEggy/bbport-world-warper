@@ -9,10 +9,14 @@
 - Imported the portable route, option, progress, action, lamp and equipment rules into `src/native`.
 - Implemented and tested launcher-side save isolation, resume state parsing, online-variable removal and real-cache selection.
 - Defined the solo native backend contract; it contains no party/session/networking API.
+- Ported in-process button/stick injection into Supermedo's runtime pad layer.
+- Added guarded guest-memory reads and writes using Supermedo's runtime fault-recovery path.
+- Added bounded image binding and byte-signature verification for Bloodborne 1.09 hook sites.
+- Added a responsive GitHub Pages project site under `docs/`.
 
 ## In progress
 
-- Implement guarded memory access and 1.09 image-offset hooks using Supermedo's runtime fault recovery.
+- Connect image binding at `bbgpu_patch_image` and implement the main-thread hook.
 - Recover ReturnPointParam lookup and loaded-enemy enumeration without Visy's party layer.
 - Connect Supermedo's pipeline counters to `CompileCounters`.
 

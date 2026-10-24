@@ -2,6 +2,8 @@
 
 A shader-cache builder for Supermedo's native Bloodborne Windows port. It runs the exact renderer used for normal play, but on an isolated copy of the save while writing shaders and pipelines into the player's real GPU cache.
 
+The project website is maintained as a dependency-free GitHub Pages site in `docs/`.
+
 ## Target
 
 - Base: `Supermedo/bloodborne_pc` tag `windows-v1.9.4` (`3fabfa7a7af67a34a6dfc630b6ec2539b68fad4d`)
@@ -29,11 +31,11 @@ A custom shader gallery may be added later for repeatable effect coverage, but i
 - `src/`: the Supermedo-facing implementation and portability layer.
 - `tests/`: unit and source-contract tests.
 - `tools/`: dependency and coverage audits.
-- `docs/`: architecture, milestones and compatibility notes.
+- `docs/`: architecture, milestones, compatibility notes and the GitHub Pages site.
 
 ## Current status
 
-The exact upstream revisions are pinned and the complete world-warper core, rules, generated equipment table, launcher tests and Supermedo benchmark code are present under `reference/`. The first dependency audit is implemented. Save isolation and real-cache selection are implemented and tested. A solo native backend contract now defines the Supermedo port boundary without importing multiplayer; its memory/hook implementation is the next milestone.
+The exact upstream revisions are pinned and the complete world-warper core, rules, generated equipment table, launcher tests and Supermedo benchmark code are present under `reference/`. Save isolation, real-cache selection, in-process controller injection, guarded memory access and bounded image/signature checks are implemented and tested. The next milestone connects the image binding to Supermedo's patch entry point and installs the verified main-thread hook.
 
 ## Ground rules
 
