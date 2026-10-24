@@ -45,6 +45,18 @@ class NativeSourceContractTests(unittest.TestCase):
         self.assertIn("32-byte shadow space", source)
         self.assertIn("FlushInstructionCache", source)
 
+    def test_loader_patch_registers_the_unpatched_image_and_size(self):
+        patch = (PORT / "patches/0001-world-warper-image-registration.patch").read_text(encoding="utf-8")
+        image = (PORT / "gpu/shim/bbport_world_warper_image.cpp").read_text(encoding="utf-8")
+        self.assertIn("void bbgpu_world_warper_set_image(unsigned char *image, uint64_t size);", patch)
+        self.assertIn("bbnet_set_image(image, size);", patch)
+        self.assertIn("+    bbgpu_world_warper_set_image(image, size);", patch)
+        self.assertLess(
+            patch.index("+    bbgpu_world_warper_set_image(image, size);"),
+            patch.index("if (patch_file) apply_patches"),
+        )
+        self.assertIn('extern "C" void bbgpu_world_warper_set_image', image)
+
 
 if __name__ == "__main__":
     unittest.main()
