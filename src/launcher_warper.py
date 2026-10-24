@@ -13,7 +13,7 @@ from pathlib import Path
 WARPER_DIR = "world_warper"
 WARPER_STATE = "world_warper_state.txt"
 
-_MODE_RE = re.compile(r"^(tour|replay|measure)(?:,[a-z][a-z0-9_-]*(?:=[A-Za-z0-9_+.-]+)?)*$")
+_MODE_RE = re.compile(r"^(smoke|tour|replay|measure)(?:,[a-z][a-z0-9_-]*(?:=[A-Za-z0-9_+.-]+)?)*$")
 _ONLINE_EXACT = {"BB_ONLINE", "BB_NET_BACKEND"}
 _ONLINE_PREFIXES = ("BB_PARTY", "BB_SHADNET", "BB_THD", "BB_COMMUNITY")
 
