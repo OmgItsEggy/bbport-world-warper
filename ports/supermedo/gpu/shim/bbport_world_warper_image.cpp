@@ -68,9 +68,3 @@ bool Matches(std::uint64_t offset, std::initializer_list<std::uint8_t> expected)
 }
 
 } // namespace BbWorldWarperImage
-
-extern "C" void bbgpu_world_warper_set_image(unsigned char* image, std::uint64_t size) {
-    if (!BbWorldWarperImage::Bind(image, size)) {
-        std::printf("[warper] loaded image registration rejected\n");
-    }
-}
