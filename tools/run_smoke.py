@@ -21,14 +21,9 @@ def main():
     for path in required:
         if not path.is_file():
             parser.error(f'Missing required file: {path}')
-    source = install / 'user/savedata'
-    if not source.is_dir():
-        parser.error(f'No existing character save at {source}')
-    run = ROOT / 'build/smoke'
+    run = ROOT / 'build/fresh-character'
     user = run / 'user'
     user.mkdir(parents=True, exist_ok=True)
-    if not (user / 'savedata').exists():
-        shutil.copytree(source, user / 'savedata')
     for name in ('bbport.ini', 'input.ini'):
         if (install / name).is_file():
             shutil.copy2(install / name, run / name)
@@ -37,12 +32,17 @@ def main():
            not key.startswith(('BB_PARTY', 'BB_SHADNET', 'BB_THD', 'BB_COMMUNITY'))}
     env.update(BB_WORLD_WARPER='smoke', BB_USER_DIR=str(user),
                BB_GPU_USER_DIR=str(install / 'user'), BB_CONFIG=str(run / 'bbport.ini'))
+    env['BB_WORLD_WARPER_LAMP'] = '2412950'
     env['PATH'] = str(args.runtime_bin.resolve()) + os.pathsep + str(install / 'bin') + os.pathsep + env.get('PATH', '')
     command = [str(probe), str(install / 'out/boot-linked.bin'),
                '--content-profile', str(install / 'out/content.bin'),
                '--patches', str(install / 'out/patches.bin'),
                '--app0', str(game), '--user', str(user), '--timeout', '0']
-    print('Load your copied character. The camera sweep starts in gameplay and ends after 60 seconds.')
+    if (user / 'savedata/1/CUSA00207/SPRJ0005/userdata0000').is_file():
+        print('Choose Continue or Load Game to use the separate test character.')
+    else:
+        print('First run: choose New Game and create a disposable character. No progressed save is needed.')
+    print('After teleporting to Central Yharnam: 18 seconds of short movement loops, then a camera sweep.')
     print('Quit normally afterward. Log:', run / 'smoke.log')
     if args.prepare_only:
         return 0
