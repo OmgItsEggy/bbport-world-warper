@@ -14,6 +14,7 @@ def main():
     parser.add_argument('--probe', type=Path, required=True)
     parser.add_argument('--runtime-bin', type=Path, required=True)
     parser.add_argument('--prepare-only', action='store_true')
+    parser.add_argument('--record-exit', action='store_true')
     args = parser.parse_args()
     install, game, probe = args.install.resolve(), args.game.resolve(), args.probe.resolve()
     required = [probe, game / 'eboot.bin', install / 'out/boot-linked.bin',
@@ -35,18 +36,28 @@ def main():
     env['BB_WORLD_WARPER_LAMP'] = '2412950'
     env['BB_WORLD_WARPER_ROUTE'] = 'three-area'
     env['BB_WORLD_WARPER_STATE'] = str(run / 'three-area-progress.txt')
+    env['BB_WORLD_WARPER_AUTO'] = '1'
+    if args.record_exit:
+        env['BB_WORLD_WARPER_RECORD'] = 'cathedral-exit'
+        env['BB_PAD_RECORD'] = str(run / 'cathedral-exit.pad')
+    if not (user / 'savedata/1/CUSA00207/SPRJ0005/userdata0000').is_file():
+        parser.error('Automatic Continue requires the imported test character.')
     env['PATH'] = str(args.runtime_bin.resolve()) + os.pathsep + str(install / 'bin') + os.pathsep + env.get('PATH', '')
     command = [str(probe), str(install / 'out/boot-linked.bin'),
                '--content-profile', str(install / 'out/content.bin'),
                '--patches', str(install / 'out/patches.bin'),
                '--app0', str(game), '--user', str(user), '--timeout', '0']
     if (user / 'savedata/1/CUSA00207/SPRJ0005/userdata0000').is_file():
-        print('Choose Continue or Load Game to use the separate test character.')
+        print('Automatic Continue is enabled. Leave the title screen controls untouched.')
     else:
         print('First run: choose New Game and create a disposable character. No progressed save is needed.')
     print('Three-area tour: Central Yharnam, Cathedral Ward, Old Yharnam.')
     print('Each area: 18 seconds of movement then 42 seconds of fast camera sweep; allow loading time.')
-    print('Quit normally afterward. Log:', run / 'smoke.log')
+    print('The game closes 10 seconds after the tour finishes. Log:', run / 'smoke.log')
+    if args.record_exit:
+        print('RECORDING MODE: automatic travel stops at Cathedral Ward. Automatic exit is disabled.')
+        print('At the lamp: press F9, walk outside to a useful viewpoint, release movement, then press F9 again.')
+        print('Quit normally after recording. Your recorded route stays in the project.')
     if args.prepare_only:
         return 0
     with (run / 'smoke.log').open('w', encoding='utf-8') as log:

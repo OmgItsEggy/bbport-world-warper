@@ -8,8 +8,10 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <SDL3/SDL.h>
 
 extern "C" void runtime_pad_director_sticks(int, int, int, int);
+extern "C" void runtime_pad_director_press(std::uint32_t);
 
 namespace {
 using Clock = std::chrono::steady_clock;
@@ -24,6 +26,13 @@ std::uint32_t target_lamp = 0;
 unsigned route_index = 0;
 bool tour = false;
 const char* state_path = nullptr;
+Clock::time_point boot_time;
+Clock::time_point finish_time;
+double last_confirm = -10;
+bool automatic = false;
+bool entered_world = false;
+bool exit_sent = false;
+bool record_exit = false;
 
 void RecordStop(std::uint32_t lamp) {
     if (!state_path) return;
@@ -40,8 +49,20 @@ template <typename T> T Read(std::uint64_t address) {
 }
 
 void Tick() {
-    if (finished) return;
     const auto now = Clock::now();
+    if (finished) {
+        runtime_pad_director_press(0);
+        if (automatic && !exit_sent && finish_time != Clock::time_point{} &&
+            std::chrono::duration<double>(now - finish_time).count() >= 10) {
+            exit_sent = true;
+            std::printf("[warper] automatic exit after cache settling period\n");
+            std::fflush(stdout);
+            SDL_Event quit{};
+            quit.type = SDL_EVENT_QUIT;
+            SDL_PushEvent(&quit);
+        }
+        return;
+    }
     if (target_lamp && warp_requested && std::chrono::duration<double>(now - warp_time).count() > 120) {
         finished = true;
         runtime_pad_director_sticks(-1,-1,-1,-1);
@@ -54,6 +75,27 @@ void Tick() {
     const auto helper = Read<std::uint64_t>(BbWorldWarperImage::Address(0x553e8b8));
     const bool in_frame = helper && (Read<unsigned char>(helper + 0x50) || Read<unsigned char>(helper + 0x51));
     const auto loading = Read<unsigned char>(BbWorldWarperImage::Address(0x556286b));
+    if (player && in_frame && !loading) entered_world = true;
+    if (automatic && !entered_world) {
+        const double seconds = std::chrono::duration<double>(now - boot_time).count();
+        runtime_pad_director_press(0);
+        if (seconds > 180) {
+            std::printf("[warper] automatic Continue timed out; close and inspect the title screen\n");
+            std::fflush(stdout);
+            finished = true;
+            return;
+        }
+        if (!loading && seconds > 8) {
+            if (seconds - last_confirm >= 3) {
+                last_confirm = seconds;
+                std::printf("[warper] confirming title/Continue\n");
+                std::fflush(stdout);
+            }
+            if (seconds - last_confirm < 0.15) runtime_pad_director_press(0x4000);
+        }
+    } else {
+        runtime_pad_director_press(0);
+    }
     if (warp_requested && (loading || !player)) saw_loading = true;
     if (!player || !in_frame || loading) {
         runtime_pad_director_sticks(-1,-1,-1,-1);
@@ -99,6 +141,11 @@ void Tick() {
                     tour ? BbWorldWarperRoute::stops[route_index].name : "Central Yharnam", map);
         std::fflush(stdout);
     }
+    if (record_exit && !target_lamp) {
+        runtime_pad_director_sticks(-1,-1,-1,-1);
+        runtime_pad_director_press(0);
+        return;
+    }
     if (!started) {
         started = true;
         previous = now;
@@ -127,6 +174,7 @@ void Tick() {
             std::printf("[warper] three-area tour complete\n");
         }
         finished = true;
+        finish_time = now;
         std::printf("[warper] movement and sweep complete after %.1f active seconds; quit normally\n", elapsed);
         std::fflush(stdout);
         return;
@@ -140,6 +188,11 @@ extern "C" void bbgpu_world_warper_set_image(unsigned char* image, std::uint64_t
     if (!BbWorldWarperImage::Bind(image, size)) return;
     const char* mode = std::getenv("BB_WORLD_WARPER");
     if (!mode || std::strcmp(mode, "smoke") != 0) return;
+    boot_time = Clock::now();
+    const char* auto_mode = std::getenv("BB_WORLD_WARPER_AUTO");
+    automatic = auto_mode && std::strcmp(auto_mode, "1") == 0;
+    const char* recording = std::getenv("BB_WORLD_WARPER_RECORD");
+    record_exit = recording && std::strcmp(recording, "cathedral-exit") == 0;
     const char* lamp = std::getenv("BB_WORLD_WARPER_LAMP");
     // The prototype supports one verified route target only.
     if (lamp && std::strcmp(lamp, "2412950") == 0) target_lamp = 2412950;
@@ -161,6 +214,7 @@ extern "C" void bbgpu_world_warper_set_image(unsigned char* image, std::uint64_t
             route_index = 0;
             if (state_path) { if (auto* file = std::fopen(state_path, "w")) std::fclose(file); }
         }
+        if (record_exit) route_index = 1;
         target_lamp = BbWorldWarperRoute::stops[route_index].lamp;
         std::printf("[warper] three-area tour starting at stop %u\n", route_index + 1);
     }
