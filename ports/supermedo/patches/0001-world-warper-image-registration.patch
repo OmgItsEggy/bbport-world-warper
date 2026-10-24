@@ -1,0 +1,26 @@
+diff --git a/gpu/bbgpu.h b/gpu/bbgpu.h
+index 540f93a..f7a0a25 100644
+--- a/gpu/bbgpu.h
++++ b/gpu/bbgpu.h
+@@ -21,6 +21,9 @@ void bbnet_configure(const char *app0, const char *serial, const char *title, cons
+  * start (bbnet/bbnet_glue.cpp). */
+ void bbnet_set_image(unsigned char *image, uint64_t size);
+ void bbnet_initialize(void);
++/* World Warper: bind the unpatched Bloodborne image and its checked extent before the guest
++ * starts. The feature remains dormant unless its launcher option is present. */
++void bbgpu_world_warper_set_image(unsigned char *image, uint64_t size);
+ /* Creates window, Vulkan device, presenter and GPU command processor. */
+ int bbgpu_init(const BbGpuConfig *config);
+ /* Function for an imported NID ("NID#lib#mod"), or 0 when the GPU library does not provide it. */
+diff --git a/src/probe.c b/src/probe.c
+index bca865f..8cb38af 100644
+--- a/src/probe.c
++++ b/src/probe.c
+@@ -692,6 +692,7 @@ int main(int argc, char **argv) {
+     }
+     /* The Hunter's Dream backend reads the game's code before the patches change it. */
+     bbnet_set_image(image, size);
++    bbgpu_world_warper_set_image(image, size);
+     if (patch_file) apply_patches(patch_file, segments, ns, relocs, nr);
+ #ifdef _WIN32
+     printf("Guest TCB loads redirected to the TEB TLS slot: %" PRIu64 "\n", patch_tcb_loads(segments, ns));
