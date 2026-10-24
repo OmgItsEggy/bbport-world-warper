@@ -1,0 +1,17 @@
+name: Tests
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Python behavior and source checks
+        run: python3 -m unittest discover -s tests -v
+      - name: Compile and exercise image binding
+        run: |
+          g++ -std=c++17 -Wall -Wextra -Werror -pthread -Iports/supermedo/gpu/shim tests/native_image_test.cpp ports/supermedo/gpu/shim/bbport_world_warper_image.cpp -o /tmp/image-test
+          /tmp/image-test
+      - name: Compile frame detour
+        run: g++ -std=c++17 -Wall -Wextra -Werror -pthread -c ports/supermedo/gpu/shim/bbport_world_warper_hook.cpp -o /tmp/hook.o
