@@ -33,7 +33,7 @@ A custom shader gallery may be added later for repeatable effect coverage, but i
 
 ## Current status
 
-The exact upstream revisions are pinned and the complete world-warper core, rules, generated equipment table, launcher tests and Supermedo benchmark code are present under `reference/`. The first dependency audit is implemented. The next code milestone is a solo `WarperBackend` for Supermedo that replaces Visy's party-only memory, lamp, enemy and logging helpers without importing multiplayer.
+The exact upstream revisions are pinned and the complete world-warper core, rules, generated equipment table, launcher tests and Supermedo benchmark code are present under `reference/`. The first dependency audit is implemented. Save isolation and real-cache selection are implemented and tested. A solo native backend contract now defines the Supermedo port boundary without importing multiplayer; its memory/hook implementation is the next milestone.
 
 ## Ground rules
 
