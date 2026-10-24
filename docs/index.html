@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="bbport World Warper is an in-engine shader-cache tour for Supermedo's Bloodborne Windows port.">
+  <title>bbport World Warper</title>
+  <link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <a class="wordmark" href="#top" aria-label="bbport World Warper home">
+      <span class="mark" aria-hidden="true"></span>
+      <span>bbport <b>World Warper</b></span>
+    </a>
+    <nav aria-label="Main navigation">
+      <a href="#coverage">Coverage</a>
+      <a href="#architecture">How it works</a>
+      <a href="#roadmap">Roadmap</a>
+      <a class="nav-cta" href="https://github.com/OmgItsEggy/bbport-world-warper">GitHub</a>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="hero" id="top">
+      <div class="hero-copy">
+        <p class="eyebrow">A native shader-cache tour for Bloodborne on Windows</p>
+        <h1>Walk the nightmare<br><em>before you play it.</em></h1>
+        <p class="lede">
+          World Warper drives real Bloodborne areas, equipment, enemies and effects
+          through the exact Supermedo renderer you use to play—building its genuine
+          GPU cache ahead of your run.
+        </p>
+        <div class="hero-actions">
+          <a class="button primary" href="https://github.com/OmgItsEggy/bbport-world-warper">View source</a>
+          <a class="button secondary" href="#roadmap">See development status</a>
+        </div>
+        <p class="notice"><span>Early development</span> Prototype only; no downloadable build yet.</p>
+      </div>
+
+      <div class="hero-art" aria-label="A diagram of a hunter crossing a series of shader compilation gates">
+        <div class="moon"></div>
+        <div class="spire spire-one"></div>
+        <div class="spire spire-two"></div>
+        <div class="spire spire-three"></div>
+        <div class="route">
+          <span class="route-point one"></span>
+          <span class="route-point two"></span>
+          <span class="route-point three"></span>
+          <span class="route-point four"></span>
+        </div>
+        <div class="hunter"><i></i></div>
+        <div class="art-label">
+          <span>Automated route</span>
+          <strong>Real maps · real renderer · real cache</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="manifesto ruled-section">
+      <p class="section-number">I</p>
+      <div>
+        <p class="eyebrow">The problem</p>
+        <h2>Your first tour of Yharnam<br>should not be a compilation pass.</h2>
+      </div>
+      <p class="section-copy">
+        Bloodborne's PC ports compile graphics work as new content appears. World
+        Warper turns that unavoidable first encounter into a controlled, resumable
+        run—without touching the player's live save or substituting another fork's
+        incompatible cache.
+      </p>
+    </section>
+
+    <section class="coverage" id="coverage">
+      <div class="section-heading">
+        <p class="eyebrow">Coverage plan</p>
+        <h2>One tour. More of the renderer.</h2>
+        <p>A hybrid route is more complete than a single benchmark or synthetic gallery.</p>
+      </div>
+
+      <div class="coverage-grid">
+        <article class="feature feature-wide">
+          <span class="feature-index">01</span>
+          <div class="feature-icon map-icon" aria-hidden="true"></div>
+          <h3>Real-area traversal</h3>
+          <p>Load genuine maps, lighting, geometry, visibility state and encounter-specific render passes.</p>
+          <strong>The foundation</strong>
+        </article>
+        <article class="feature">
+          <span class="feature-index">02</span>
+          <div class="feature-icon blade-icon" aria-hidden="true"></div>
+          <h3>Equipment pass</h3>
+          <p>Rotate armour and both weapon slots, then exercise transforms, attacks and firearms.</p>
+          <strong>75 appearances</strong>
+        </article>
+        <article class="feature">
+          <span class="feature-index">03</span>
+          <div class="feature-icon eye-icon" aria-hidden="true"></div>
+          <h3>Enemies & bosses</h3>
+          <p>Find loaded enemy kinds and expose their rendering, attacks, hit reactions and death effects.</p>
+          <strong>Encounter-aware</strong>
+        </article>
+        <article class="feature">
+          <span class="feature-index">04</span>
+          <div class="feature-icon spark-icon" aria-hidden="true"></div>
+          <h3>Effects & tools</h3>
+          <p>Trigger representative items, projectiles and Hunter tools under controlled conditions.</p>
+          <strong>Planned pass</strong>
+        </article>
+        <article class="feature feature-wide">
+          <span class="feature-index">05</span>
+          <div class="feature-icon clock-icon" aria-hidden="true"></div>
+          <h3>Optional variants</h3>
+          <p>Extend the route to cutscenes, time-of-day states and Chalice rows when the core tour is stable.</p>
+          <strong>After the main route</strong>
+        </article>
+      </div>
+    </section>
+
+    <section class="architecture ruled-section" id="architecture">
+      <p class="section-number">II</p>
+      <div class="section-heading compact">
+        <p class="eyebrow">Architecture</p>
+        <h2>Native where it matters.<br>Isolated where it counts.</h2>
+      </div>
+      <div class="flow" role="img" aria-label="The player save is copied into an isolated World Warper save. The native tour runs through Supermedo and writes to the player's real GPU cache.">
+        <div class="flow-node">
+          <span>Read only</span>
+          <strong>Player save</strong>
+        </div>
+        <i aria-hidden="true"></i>
+        <div class="flow-node accent">
+          <span>Isolated copy</span>
+          <strong>Warper run</strong>
+        </div>
+        <i aria-hidden="true"></i>
+        <div class="flow-node">
+          <span>Exact binary</span>
+          <strong>Supermedo renderer</strong>
+        </div>
+        <i aria-hidden="true"></i>
+        <div class="flow-node gold">
+          <span>Persistent result</span>
+          <strong>Real GPU cache</strong>
+        </div>
+      </div>
+      <p class="architecture-note">
+        A cache produced by another fork is not assumed compatible. The tour lives
+        inside the target port and refuses to run when its Bloodborne 1.09 hook
+        signatures do not match.
+      </p>
+    </section>
+
+    <section class="status-band" aria-label="Project facts">
+      <div><strong>16</strong><span>automated tests</span></div>
+      <div><strong>1.9.4</strong><span>Supermedo target</span></div>
+      <div><strong>GPL-3+</strong><span>open-source licence</span></div>
+      <div><strong>0</strong><span>live saves touched</span></div>
+    </section>
+
+    <section class="roadmap" id="roadmap">
+      <div class="section-heading">
+        <p class="eyebrow">Build in public</p>
+        <h2>The road through the dream.</h2>
+        <p>The implementation is being built in testable layers, with the exact upstream revisions pinned.</p>
+      </div>
+      <ol class="timeline">
+        <li class="done">
+          <span class="timeline-mark">✓</span>
+          <div><small>Foundation</small><h3>Route rules & isolation</h3><p>Core state, equipment tables, copied saves, cache selection and resumable progress.</p></div>
+        </li>
+        <li class="active">
+          <span class="timeline-mark">II</span>
+          <div><small>Active now</small><h3>Native Supermedo backend</h3><p>Controls, guarded memory and the verified frame detour are in; image registration and game-state access are next.</p></div>
+        </li>
+        <li>
+          <span class="timeline-mark">III</span>
+          <div><small>Next proof</small><h3>One-location smoke run</h3><p>Bind one lamp, execute one controlled route and verify cache growth end to end.</p></div>
+        </li>
+        <li>
+          <span class="timeline-mark">IV</span>
+          <div><small>Expansion</small><h3>Full world tour</h3><p>Add maps, equipment, enemy kinds, effects, bosses and optional variants.</p></div>
+        </li>
+      </ol>
+    </section>
+
+    <section class="closing">
+      <p class="eyebrow">Follow the build</p>
+      <h2>Help us map the nightmare.</h2>
+      <p>Read the source, inspect the architecture, or share the project with another hunter.</p>
+      <a class="button primary" href="https://github.com/OmgItsEggy/bbport-world-warper">Open the GitHub repository</a>
+    </section>
+  </main>
+
+  <footer>
+    <p>bbport World Warper is an independent community project and is not affiliated with Sony Interactive Entertainment or FromSoftware. Bloodborne is a trademark of Sony Interactive Entertainment.</p>
+    <p>GPL-3.0-or-later · Built for the Supermedo Windows port</p>
+  </footer>
+</body>
+</html>

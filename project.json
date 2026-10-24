@@ -1,0 +1,36 @@
+{
+  "name": "bbport-world-warper",
+  "license": "GPL-3.0-or-later",
+  "targets": {
+    "supermedo": {
+      "repository": "Supermedo/bloodborne_pc",
+      "tag": "windows-v1.9.4",
+      "commit": "3fabfa7a7af67a34a6dfc630b6ec2539b68fad4d"
+    },
+    "reference": {
+      "repository": "visy/bloodborne_pc_windows_port",
+      "tag": "v0.7.5",
+      "commit": "6e0dec4ff4d2f19d86b97298e2382062f534275e"
+    }
+  },
+  "coverage": {
+    "real_area_traversal": true,
+    "camera_and_movement": true,
+    "weapon_actions": true,
+    "right_weapon_models": 26,
+    "left_weapon_models": 15,
+    "armor_sets": 34,
+    "item_effects": true,
+    "hunter_tools": true,
+    "enemy_kinds": true,
+    "boss_arenas": "optional",
+    "cutscenes": "optional",
+    "time_of_day": "optional",
+    "chalice_dungeons": "optional"
+  },
+  "cache_policy": {
+    "save_directory": "isolated-copy",
+    "gpu_cache_directory": "player-real-cache",
+    "resumable": true
+  }
+}
