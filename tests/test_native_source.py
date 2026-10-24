@@ -28,8 +28,22 @@ class NativeSourceContractTests(unittest.TestCase):
         self.assertIn("bool Bind(unsigned char* image", header)
         self.assertIn("bool Matches(std::uint64_t offset", header)
         self.assertIn("length <= size - offset", source)
-        self.assertIn("compare_exchange_strong", source)
+        self.assertIn("std::lock_guard<std::mutex>", source)
+        self.assertIn("g_size.store(size", source)
+        self.assertIn("g_image.store(image", source)
         self.assertIn("image[offset + index] != byte", source)
+
+    def test_main_thread_hook_is_byte_verified_and_preserves_guest_state(self):
+        source = (PORT / "gpu/shim/bbport_world_warper_hook.cpp").read_text(encoding="utf-8")
+        self.assertIn("kFlipperUpdate = 0x2034770", source)
+        self.assertIn("kFlipperPrologue", source)
+        self.assertIn("BbWorldWarperImage::Matches", source)
+        self.assertIn("runtime_low_map", source)
+        self.assertIn("SaveVolatile", source)
+        self.assertIn("RestoreVolatile", source)
+        self.assertIn("SkipGuestRedZone", source)
+        self.assertIn("32-byte shadow space", source)
+        self.assertIn("FlushInstructionCache", source)
 
 
 if __name__ == "__main__":

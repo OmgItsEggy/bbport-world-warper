@@ -12,11 +12,12 @@
 - Ported in-process button/stick injection into Supermedo's runtime pad layer.
 - Added guarded guest-memory reads and writes using Supermedo's runtime fault-recovery path.
 - Added bounded image binding and byte-signature verification for Bloodborne 1.09 hook sites.
+- Added a minimal solo main-thread detour for the byte-verified `SprjFlipper::Update` entry.
 - Added a responsive GitHub Pages project site under `docs/`.
 
 ## In progress
 
-- Connect image binding at `bbgpu_patch_image` and implement the main-thread hook.
+- Connect image binding to Supermedo's loaded-image registration path.
 - Recover ReturnPointParam lookup and loaded-enemy enumeration without Visy's party layer.
 - Connect Supermedo's pipeline counters to `CompileCounters`.
 

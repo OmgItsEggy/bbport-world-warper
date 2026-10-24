@@ -35,7 +35,7 @@ A custom shader gallery may be added later for repeatable effect coverage, but i
 
 ## Current status
 
-The exact upstream revisions are pinned and the complete world-warper core, rules, generated equipment table, launcher tests and Supermedo benchmark code are present under `reference/`. Save isolation, real-cache selection, in-process controller injection, guarded memory access and bounded image/signature checks are implemented and tested. The next milestone connects the image binding to Supermedo's patch entry point and installs the verified main-thread hook.
+The exact upstream revisions are pinned and the complete world-warper core, rules, generated equipment table, launcher tests and Supermedo benchmark code are present under `reference/`. Save isolation, real-cache selection, in-process controller injection, guarded memory access, bounded image checks and the byte-verified main-thread detour are implemented and tested. The next milestone connects Supermedo's loaded-image registration path and proves the first live runtime tick.
 
 ## Ground rules
 
