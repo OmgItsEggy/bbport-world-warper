@@ -2,7 +2,7 @@
 #include "bbport_world_warper_memory.h"
 
 extern "C" {
-#include "../../../src/runtime.h"
+#include "../../src/runtime.h"
 }
 
 #include <cstring>
