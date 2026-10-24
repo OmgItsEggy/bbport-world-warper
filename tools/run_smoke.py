@@ -33,6 +33,8 @@ def main():
     env.update(BB_WORLD_WARPER='smoke', BB_USER_DIR=str(user),
                BB_GPU_USER_DIR=str(install / 'user'), BB_CONFIG=str(run / 'bbport.ini'))
     env['BB_WORLD_WARPER_LAMP'] = '2412950'
+    env['BB_WORLD_WARPER_ROUTE'] = 'three-area'
+    env['BB_WORLD_WARPER_STATE'] = str(run / 'three-area-progress.txt')
     env['PATH'] = str(args.runtime_bin.resolve()) + os.pathsep + str(install / 'bin') + os.pathsep + env.get('PATH', '')
     command = [str(probe), str(install / 'out/boot-linked.bin'),
                '--content-profile', str(install / 'out/content.bin'),
@@ -42,7 +44,8 @@ def main():
         print('Choose Continue or Load Game to use the separate test character.')
     else:
         print('First run: choose New Game and create a disposable character. No progressed save is needed.')
-    print('After teleporting to Central Yharnam: 18 seconds of short movement loops, then a camera sweep.')
+    print('Three-area tour: Central Yharnam, Cathedral Ward, Old Yharnam.')
+    print('Each area: 18 seconds of movement then 42 seconds of fast camera sweep; allow loading time.')
     print('Quit normally afterward. Log:', run / 'smoke.log')
     if args.prepare_only:
         return 0

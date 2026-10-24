@@ -15,6 +15,6 @@ inline Input At(double elapsed) {
         if (phase < 5) return {0,128,128,128};
         return {255,128,128,128};
     }
-    return {128,128,180,128};
+    return {128,128,255,128};
 }
 }
