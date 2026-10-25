@@ -59,6 +59,10 @@ bool encounter_watch = false;
 BbWorldWarperEncounter::Run boss_run;
 bool boss_health_stages = false;
 bool boss_runs_enabled = false;
+bool boss_entry_only = false;
+double boss_done_at=-1;
+bool cinematic_load_seen=false;
+Clock::time_point encounter_load_since;
 
 bool GearTick(Clock::time_point now) {
     if (!gear_enabled || gear_row >= BbWorldWarperGear::rows) return false;
@@ -106,10 +110,10 @@ bool GearTick(Clock::time_point now) {
     return true;
 }
 
-void RecordStop(std::uint32_t lamp) {
+void RecordStop(std::uint32_t lamp,bool success=true) {
     if (!state_path) return;
     if (auto* file = std::fopen(state_path, "a")) {
-        std::fprintf(file, "done %u\n", lamp);
+        std::fprintf(file, "%s %u\n",success?"done":"skip", lamp);
         std::fclose(file);
     }
 }
@@ -137,6 +141,7 @@ void Tick() {
     const auto now = Clock::now();
     if (finished) {
         runtime_pad_director_press(0);
+        runtime_pad_director_sticks(128,128,128,128);
         if (automatic && !exit_sent && finish_time != Clock::time_point{} &&
             std::chrono::duration<double>(now - finish_time).count() >= 10) {
             exit_sent = true;
@@ -148,9 +153,12 @@ void Tick() {
         }
         return;
     }
-    if(tour && boss_runs_enabled && route_index<route_count && !route_stops[route_index].lamp) {
-        std::printf("[warper] boss-unavailable boss=%s reason=ending-arena-entry-not-implemented; no ordinary Dream warp substituted\n",route_stops[route_index].name);
-        if(state_path) if(auto* file=std::fopen(state_path,"a")) { std::fprintf(file,"skip 0\n"); std::fclose(file); }
+    if(tour && boss_runs_enabled && route_index<route_count &&
+       (!route_stops[route_index].lamp || route_stops[route_index].boss==2600850)) {
+        const auto& stop=route_stops[route_index];
+        std::printf("[warper] boss-unavailable boss=%s reason=%s; no substitute warp\n",stop.name,
+            stop.boss==2600850?"excluded-by-user-chase-encounter":"ending-arena-entry-not-implemented");
+        if(state_path) if(auto* file=std::fopen(state_path,"a")) { std::fprintf(file,"skip %u\n",stop.lamp); std::fclose(file); }
         ++route_index;
         started=false; warp_requested=false; saw_loading=false; elapsed=0;
         if(route_index<route_count) target_lamp=route_stops[route_index].lamp;
@@ -167,6 +175,25 @@ void Tick() {
     const auto helper = Read<std::uint64_t>(BbWorldWarperImage::Address(0x553e8b8));
     const bool in_frame = helper && (Read<unsigned char>(helper + 0x50) || Read<unsigned char>(helper + 0x51));
     const auto loading = Read<unsigned char>(BbWorldWarperImage::Address(0x556286b));
+    if(started && boss_run.Active() && !boss_run.Done()) {
+        // Remo can temporarily remove/reload the player during a legitimate
+        // phase cinematic. Keep that grace until the world is ready again.
+        const bool playing=BbWorldWarperObserve::CutscenePlaying();
+        if(playing) cinematic_load_seen=true;
+        if(loading || !player || !in_frame) {
+            if(encounter_load_since==Clock::time_point{}) encounter_load_since=now;
+            const bool expired=std::chrono::duration<double>(now-encounter_load_since).count()>180;
+            if((!cinematic_load_seen && !cinematic_wait) || expired) {
+                boss_run.Abort(expired?"cinematic-reload-timeout":"unexpected-load-or-player-loss-during-encounter"); boss_run.Finish();
+                target_lamp=tour?route_stops[route_index].lamp:0;
+                SkipStop(now,"encounter interrupted; restart with pristine disposable save");
+                return;
+            }
+        } else {
+            encounter_load_since={};
+            if(!playing) cinematic_load_seen=false;
+        }
+    }
     if (player && in_frame && !loading) entered_world = true;
     if (automatic && !entered_world) {
         const double seconds = std::chrono::duration<double>(now - boot_time).count();
@@ -244,6 +271,7 @@ void Tick() {
     const bool cinematic = BbWorldWarperObserve::CutscenePlaying();
     if (cinematic != cinematic_wait) {
         cinematic_wait = cinematic;
+        if(!cinematic && boss_run.Active()) boss_run.AfterCutscene();
         std::printf("[warper] cutscene %s: coverage clock %s\n",
                     cinematic ? "started" : "ended", cinematic ? "paused" : "resuming");
         std::fflush(stdout);
@@ -259,19 +287,23 @@ void Tick() {
         started = true;
         previous = now;
         encounter_watch = BbWorldWarperObserve::Census(world, player, tour ? route_stops[route_index].lamp : 2412950, "start");
-        if(boss_runs_enabled) boss_run.Begin(tour ? route_stops[route_index].lamp : 0,player,boss_health_stages,world,tour?route_stops[route_index].boss:0);
+        if(boss_runs_enabled) boss_run.Begin(tour ? route_stops[route_index].lamp : 0,player,boss_health_stages,world,tour?route_stops[route_index].boss:0,boss_entry_only);
+        boss_done_at=-1;
+        cinematic_load_seen=false; encounter_load_since={};
         compile_start = BbWorldWarperCompile::Read();
         compile_serial = compile_start.serial;
         compile_quiet_since = now;
         if (encounter_watch && !boss_run.Active()) std::printf("[warper] new living entities within 30m: adding 20s protected observation; attacks/phases unverified\n");
-        std::printf("[warper] coverage pass: movement 18s, combat %s, camera sweep 20s\n",
-                    combat_done ? "already covered; skipped" : "22s");
+        if(boss_runs_enabled) std::printf("[warper] encounter pass: audited entry, grounded walking, event-gated phases\n");
+        else std::printf("[warper] coverage pass: movement 18s, combat %s, camera sweep 20s\n",
+                        combat_done ? "already covered; skipped" : "22s");
         std::fflush(stdout);
     }
     elapsed += std::chrono::duration<double>(now - previous).count();
     previous = now;
     const bool replaying = tour && route_stops[route_index].lamp == 2402950 && cathedral_route.Seconds() > 0;
     const bool targeted_stop=boss_runs_enabled && tour && route_stops[route_index].boss;
+    const auto boss_input=boss_run.Active()?boss_run.Tick(elapsed):BbWorldWarperMovement::Input{128,128,128,128,0};
     const double stop_seconds = boss_run.Active() ? boss_run.Seconds() : targeted_stop ? 0 : (replaying ? cathedral_route.Seconds() + 20 : (combat_done ? 38 : 60));
     const auto counters = BbWorldWarperCompile::Read();
     if (counters.active || counters.serial != compile_serial) {
@@ -280,7 +312,11 @@ void Tick() {
     }
     const double coverage_seconds = stop_seconds + (encounter_watch && !boss_run.Active() && !targeted_stop ? 20 : 0);
     const bool quiet = !counters.active && std::chrono::duration<double>(now-compile_quiet_since).count() >= 3;
-    if (elapsed >= coverage_seconds && (quiet || elapsed >= coverage_seconds + 15)) {
+    const bool routine_done=boss_run.Active()?boss_run.Done():elapsed>=coverage_seconds;
+    if(boss_run.Active() && routine_done && boss_done_at<0) boss_done_at=elapsed;
+    // A boss stop finishes on its state machine, not a guessed total duration.
+    if (routine_done && (quiet || (!boss_run.Active() && elapsed >= coverage_seconds + 15) ||
+                        (boss_done_at>=0 && elapsed-boss_done_at>=15) || boss_run.Failed())) {
         boss_run.Finish();
         std::printf("[warper] compilation evidence: +%llu successful new pipelines, +%llu shader/pipeline compile scopes; quiet=%s; exhaustive coverage NOT claimed\n",
                     static_cast<unsigned long long>(counters.pipelines-compile_start.pipelines),
@@ -290,9 +326,9 @@ void Tick() {
         runtime_pad_director_press(0);
         runtime_pad_director_sticks(-1,-1,-1,-1);
         if (tour) {
-            RecordStop(route_stops[route_index].lamp);
-            std::printf("[warper] area %u/%u complete: %s\n", route_index + 1,
-                        route_count, route_stops[route_index].name);
+            RecordStop(route_stops[route_index].lamp,!boss_run.Active()||!boss_run.Failed());
+            std::printf("[warper] area %u/%u attempt-finished: %s result=%s\n", route_index + 1,
+                        route_count, route_stops[route_index].name,boss_run.Active()&&boss_run.Failed()?"incomplete":"see-evidence");
             ++route_index;
             if (route_index < route_count) {
                 target_lamp = route_stops[route_index].lamp;
@@ -313,9 +349,8 @@ void Tick() {
         return;
     }
     if (boss_run.Active()) {
-        const auto input=boss_run.Tick(elapsed);
-        runtime_pad_director_press(input.buttons);
-        runtime_pad_director_sticks(input.lx,input.ly,input.rx,input.ry);
+        runtime_pad_director_press(boss_input.buttons);
+        runtime_pad_director_sticks(boss_input.lx,boss_input.ly,boss_input.rx,boss_input.ry);
         return;
     }
     if(targeted_stop) {
@@ -353,6 +388,8 @@ extern "C" void bbgpu_world_warper_set_image(unsigned char* image, std::uint64_t
     boss_health_stages=health_stages && std::strcmp(health_stages,"1")==0;
     const char* boss_runs=std::getenv("BB_WORLD_WARPER_BOSS_RUNS");
     boss_runs_enabled=boss_runs && std::strcmp(boss_runs,"1")==0;
+    const char* entry_mode=std::getenv("BB_WORLD_WARPER_ENTRY_ONLY");
+    boss_entry_only=entry_mode && std::strcmp(entry_mode,"1")==0;
     // The pinned 1.09 Player No Dead patch from upstream Bloodborne.xml:
     // XML guest VA 0x0593e888 minus the 0x400000 patch base.
     const std::uint32_t no_death = 1;
@@ -378,7 +415,13 @@ extern "C" void bbgpu_world_warper_set_image(unsigned char* image, std::uint64_t
     const char* route = std::getenv("BB_WORLD_WARPER_ROUTE");
     const bool encounters = route && std::strcmp(route,"encounters") == 0;
     const bool bosses = route && std::strcmp(route,"bosses") == 0;
-    tour = route && (std::strcmp(route, "three-area") == 0 || std::strcmp(route, "all-lamps") == 0 || encounters || bosses);
+    const bool entries = route && std::strcmp(route,"entry-check") == 0;
+    tour = route && (std::strcmp(route, "three-area") == 0 || std::strcmp(route, "all-lamps") == 0 || encounters || bosses || entries);
+    if(entries) {
+        route_stops=BbWorldWarperRoute::entry_stops;
+        route_count=4;
+        gear_enabled=false; combat_done=true; boss_health_stages=false; boss_entry_only=true;
+    }
     if(bosses) {
         route_stops=BbWorldWarperRoute::boss_stops.data();
         route_count=static_cast<unsigned>(BbWorldWarperRoute::boss_stops.size());

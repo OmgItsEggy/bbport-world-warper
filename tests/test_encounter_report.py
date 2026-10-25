@@ -2,6 +2,12 @@ import unittest
 from src.encounter_report import summarize
 
 class EncounterReportTests(unittest.TestCase):
+    def test_failures_and_exclusions_are_not_phase_success(self):
+        report=summarize('[warper] boss-failure boss=Orphan stage=transition reason=phase-event-not-observed\n'
+                         '[warper] boss-attempt boss=Orphan result=incomplete; NOT exhaustive coverage\n'
+                         '[warper] boss-unavailable boss=Micolash reason=excluded-by-user-chase-encounter; no substitute warp\n')
+        self.assertEqual(report['boss_roster']['Orphan'],{'status':'incomplete','reason':'phase-event-not-observed'})
+        self.assertEqual(report['boss_roster']['Micolash']['status'],'unavailable-excluded-by-user-chase-encounter')
     def test_stage_evidence_is_not_promoted_to_attack_coverage(self):
         report=summarize('[warper] boss-stage-result boss=Logarius stage=ranged animations=4 pipelines=7 compiles=13 hp=1000; animation IDs are not attack/phase classification\n'
                          '[warper] boss-stage boss=Logarius stage=close range=3 placement=FAILED hp-percent=100 hp-request=unchanged\n'

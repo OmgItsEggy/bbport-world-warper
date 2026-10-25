@@ -14,19 +14,19 @@
     }
   },
   "coverage": {
-    "real_area_traversal": true,
-    "camera_and_movement": true,
-    "weapon_actions": true,
+    "real_area_traversal": "44 lamp destinations, not exhaustive map traversal",
+    "camera_and_movement": "implemented, in-game tested",
+    "weapon_actions": "implemented, inputs and equipment verified; not every effect certified",
     "right_weapon_models": 26,
     "left_weapon_models": 15,
     "armor_sets": 34,
-    "item_effects": true,
-    "hunter_tools": true,
-    "enemy_kinds": true,
-    "boss_arenas": "optional",
-    "cutscenes": "optional",
-    "time_of_day": "optional",
-    "chalice_dungeons": "optional"
+    "item_effects": "planned controlled pass",
+    "hunter_tools": "planned controlled pass",
+    "enemy_kinds": "loaded census and natural observation, not exhaustive",
+    "boss_arenas": "experimental event-gated batch; failures reported",
+    "cutscenes": "natural entry cinematics; not exhaustive",
+    "time_of_day": "planned",
+    "chalice_dungeons": "out of scope"
   },
   "cache_policy": {
     "save_directory": "isolated-copy",

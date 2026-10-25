@@ -15,3 +15,11 @@ jobs:
           /tmp/image-test
       - name: Compile frame detour
         run: g++ -std=c++17 -Wall -Wextra -Werror -pthread -c ports/supermedo/gpu/shim/bbport_world_warper_hook.cpp -o /tmp/hook.o
+      - name: Native movement, encounter and evidence regressions
+        run: |
+          for test in encounter_plan encounter movement observe compile walk; do
+            g++ -std=c++20 -Wall -Wextra -Werror -Iports/supermedo/gpu/shim tests/native_${test}_test.cpp -o /tmp/warper-${test}
+            /tmp/warper-${test}
+          done
+          g++ -std=c++20 -Wall -Wextra -Werror -Iports/supermedo/gpu/shim tests/native_entry_placement_test.cpp ports/supermedo/gpu/shim/bbport_world_warper_entry_placement.cpp -o /tmp/warper-entry
+          /tmp/warper-entry

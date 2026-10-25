@@ -29,15 +29,15 @@
         <p class="eyebrow">A native shader-cache tour for Bloodborne on Windows</p>
         <h1>Walk the nightmare<br><em>before you play it.</em></h1>
         <p class="lede">
-          World Warper drives real Bloodborne areas, equipment, enemies and effects
-          through the exact Supermedo renderer you use to play—building its genuine
-          GPU cache ahead of your run.
+          World Warper drives real Bloodborne areas and equipment through the
+          Supermedo renderer—warming its GPU cache ahead of your run. Boss phases
+          are experimental; complete shader coverage is not claimed.
         </p>
         <div class="hero-actions">
-          <a class="button primary" href="https://github.com/OmgItsEggy/bbport-world-warper">View source</a>
+          <a class="button primary" href="https://github.com/OmgItsEggy/bbport-world-warper/releases/tag/v0.1.0-alpha.1">Get the experimental build</a>
           <a class="button secondary" href="#roadmap">See development status</a>
         </div>
-        <p class="notice"><span>Early development</span> Prototype only; no downloadable build yet.</p>
+        <p class="notice"><span>Experimental prerelease</span> Full run: equipment → 44 lanterns → boss/phase attempts. Not all shaders or bosses are covered. <a href="https://github.com/OmgItsEggy/bbport-world-warper/blob/main/QUICKSTART.md">Start here</a>.</p>
       </div>
 
       <div class="hero-art" aria-label="A diagram of a hunter crossing a series of shader compilation gates">
@@ -113,7 +113,7 @@
           <span class="feature-index">05</span>
           <div class="feature-icon clock-icon" aria-hidden="true"></div>
           <h3>Optional variants</h3>
-          <p>Extend the route to cutscenes, time-of-day states and Chalice rows when the core tour is stable.</p>
+          <p>Time-of-day and broader effect coverage are future work. Chalice Dungeons are out of scope.</p>
           <strong>After the main route</strong>
         </article>
       </div>
@@ -128,7 +128,7 @@
       <div class="flow" role="img" aria-label="The player save is copied into an isolated World Warper save. The native tour runs through Supermedo and writes to the player's real GPU cache.">
         <div class="flow-node">
           <span>Read only</span>
-          <strong>Player save</strong>
+          <strong>Imported test seed</strong>
         </div>
         <i aria-hidden="true"></i>
         <div class="flow-node accent">
@@ -154,7 +154,7 @@
     </section>
 
     <section class="status-band" aria-label="Project facts">
-      <div><strong>17</strong><span>automated tests</span></div>
+      <div><strong>44</strong><span>lantern destinations</span></div>
       <div><strong>1.9.4</strong><span>Supermedo target</span></div>
       <div><strong>GPL-3+</strong><span>open-source licence</span></div>
       <div><strong>0</strong><span>live saves touched</span></div>
@@ -173,15 +173,15 @@
         </li>
         <li class="active">
           <span class="timeline-mark">II</span>
-          <div><small>Active now</small><h3>Native Supermedo backend</h3><p>Controls, guarded memory, image registration and the verified frame detour are in; the first live tick is next.</p></div>
+          <div><small>Implemented</small><h3>Native Supermedo backend</h3><p>In-engine controls, real-cache writes, isolated saves, automatic load/exit and resumable tours.</p></div>
         </li>
         <li>
           <span class="timeline-mark">III</span>
-          <div><small>Next proof</small><h3>One-location smoke run</h3><p>Bind one lamp, execute one controlled route and verify cache growth end to end.</p></div>
+          <div><small>In-game tested</small><h3>Equipment and lanterns</h3><p>All 44 destinations reached across resumed tests; 34 equipment rows verified. Visibility is not exhaustive coverage.</p></div>
         </li>
         <li>
           <span class="timeline-mark">IV</span>
-          <div><small>Expansion</small><h3>Full world tour</h3><p>Add maps, equipment, enemy kinds, effects, bosses and optional variants.</p></div>
+          <div><small>Experimental</small><h3>Boss phases and coverage gaps</h3><p>Real entry/hit triggers, grounded approaches and known phase-event checks. Group phases, ending entries and tool/effect gallery remain incomplete.</p></div>
         </li>
       </ol>
     </section>

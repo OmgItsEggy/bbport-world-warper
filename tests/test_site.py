@@ -50,11 +50,13 @@ class ProjectSiteTests(unittest.TestCase):
     def test_repository_links_are_consistent(self):
         repository_links = [link for link in self.parser.links if link.startswith("https://github.com/")]
         self.assertGreaterEqual(len(repository_links), 3)
-        self.assertEqual(set(repository_links), {REPOSITORY_URL})
+        self.assertTrue(all(link == REPOSITORY_URL or link.startswith(REPOSITORY_URL + '/')
+                            for link in repository_links))
 
     def test_site_is_honest_about_release_status(self):
-        self.assertIn("Prototype only; no downloadable build yet.", self.html)
-        self.assertIn("Early development", self.html)
+        self.assertIn("Experimental prerelease", self.html)
+        self.assertIn("Not all shaders or bosses are covered.", self.html)
+        self.assertIn('/releases/tag/v0.1.0-alpha.1', self.html)
 
     def test_stylesheets_are_relative_and_present(self):
         self.assertEqual(self.parser.stylesheets, ["assets/site.css"])

@@ -2,6 +2,11 @@
 
 Researched: 25 October 2026. Target game: Bloodborne 1.09, including The Old Hunters.
 
+Implementation update: [the primary event-script audit](BOSS-SCRIPT-AUDIT.md)
+supersedes approximate guide thresholds where it supplies actual conditions
+(notably BSB 67%/33%, Gascoigne's beast below 34%, actor swaps and health owners).
+Micolash is now excluded from the batch at the user's request.
+
 This is the encounter implementation reference, not a claim about what the current build covers. Read the relevant row before adding or changing a boss profile. Do not use one generic 60%/30% sequence for every boss.
 
 Scope: all 17 main-game bosses and all five DLC bosses. Chalice bosses/dungeons and unused/cut content are explicitly out of scope at the user's request.

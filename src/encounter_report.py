@@ -5,6 +5,8 @@ from pathlib import Path
 
 PREFIXES = ('boss-run ', 'boss-stage ', 'boss-stage-result ', 'boss-animation-ids ',
             'boss-roster ', 'boss-attempt ', 'boss-stop ', 'boss-unavailable ',
+            'boss-activation ', 'boss-phase-event ', 'boss-failure ', 'boss-observe ',
+            'boss-entry ', 'boss-entry-state ', 'boss-wake-attempt ', 'boss-contact ',
             'compilation evidence:', 'cutscene ', 'skipped lamp ', 'area ', 'lamp tour finished')
 
 def summarize(log_text):
@@ -26,15 +28,18 @@ def summarize(log_text):
         results.append(fields)
     roster={}
     for message in events:
-        fields=dict(re.findall(r'(boss|previous-attempt|special|result)=([^ ;]+)',message))
+        fields=dict(re.findall(r'(boss|previous-attempt|special|result|reason)=([^ ;]+)',message))
         if message.startswith('boss-roster ') and 'boss' in fields:
             roster.setdefault(fields['boss'],{'status':'not-attempted-this-session'})
             if fields.get('previous-attempt')=='yes' and roster[fields['boss']]['status']=='not-attempted-this-session':
                 roster[fields['boss']]['status']='attempted-in-previous-session-not-certified'
         elif message.startswith('boss-attempt ') and 'boss' in fields:
-            roster[fields['boss']]={'status':fields.get('result','unknown')}
+            roster.setdefault(fields['boss'],{}).update(status=fields.get('result','unknown'))
         elif message.startswith('boss-unavailable ') and 'boss' in fields:
-            roster[fields['boss']]={'status':'unavailable-ending-arena-entry-not-implemented'}
+            reason=fields.get('reason','ending-arena-entry-not-implemented')
+            roster[fields['boss']]={'status':'unavailable-'+reason}
+        elif message.startswith('boss-failure ') and 'boss' in fields:
+            roster[fields['boss']]={'status':'incomplete','reason':fields.get('reason','unknown')}
     return {'scope': 'this log session, including automatic retries',
             'coverage_warning': 'HP values, loaded entities and animation IDs do not prove boss phases, specific attacks or exhaustive shader coverage.',
             'tour_finished': any(e.startswith('lamp tour finished') for e in events),

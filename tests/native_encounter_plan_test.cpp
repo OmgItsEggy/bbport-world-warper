@@ -32,8 +32,9 @@ int main() {
             assert(plan.size()==5 && plan[2].hp_percent==65 && plan[2].transition);
         }
         if(Matches(boss,2420800)) {
-            assert(plan[0].provoke && plan[3].hp_percent==45 && plan[3].transition);
-            assert(plan.size()==6 && Duration(plan.data(),plan.size())==120);
+            assert(plan[1].provoke && plan[2].hp_percent==45 && plan[2].transition);
+            assert(plan[2].event_flag==12424980);
+            assert(plan.size()==5 && Duration(plan.data(),plan.size())==105);
         }
     }
     assert(TargetHp(1000,65)==650);

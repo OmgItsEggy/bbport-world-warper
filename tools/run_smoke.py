@@ -11,6 +11,7 @@ sys.path.insert(0, str(ROOT))
 from src.test_save import reset_test_save
 from src.encounter_report import write_report
 from tools.inspect_return_points import audit_game_routes
+from tools.audit_boss_scripts import audit as audit_boss_scripts
 
 def recover_gear_checkpoint(log_path, checkpoint):
     """Migrate completed gear coverage from an older build's retained log."""
@@ -22,7 +23,7 @@ def recover_gear_checkpoint(log_path, checkpoint):
     if matches:
         checkpoint.write_text(f'attempted 34 failures {matches[-1]}\n', encoding='ascii')
 
-def main():
+def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--install', type=Path, required=True)
     parser.add_argument('--game', type=Path, required=True)
@@ -33,7 +34,8 @@ def main():
     parser.add_argument('--all-lamps', action='store_true')
     parser.add_argument('--encounters', action='store_true')
     parser.add_argument('--bosses', action='store_true')
-    args = parser.parse_args()
+    parser.add_argument('--entry-check', action='store_true')
+    args = parser.parse_args(argv)
     install, game, probe = args.install.resolve(), args.game.resolve(), args.probe.resolve()
     required = [probe, game / 'eboot.bin', install / 'out/boot-linked.bin',
                 install / 'out/content.bin', install / 'out/patches.bin']
@@ -52,57 +54,61 @@ def main():
     env.update(BB_WORLD_WARPER='smoke', BB_USER_DIR=str(user),
                BB_GPU_USER_DIR=str(install / 'user'), BB_CONFIG=str(run / 'bbport.ini'))
     env['BB_WORLD_WARPER_LAMP'] = '2412950'
-    if sum((args.encounters,args.bosses,args.all_lamps,args.record_exit))>1:
+    if sum((args.encounters,args.bosses,args.all_lamps,args.record_exit,args.entry_check))>1:
         parser.error('Select only one tour/recording mode')
-    route = 'bosses' if args.bosses else ('encounters' if args.encounters else ('all-lamps' if args.all_lamps else 'three-area'))
-    boss_batch=args.encounters or args.bosses
-    if args.bosses:
+    route = 'entry-check' if args.entry_check else 'bosses' if args.bosses else ('encounters' if args.encounters else ('all-lamps' if args.all_lamps else 'three-area'))
+    boss_batch=args.encounters or args.bosses or args.entry_check
+    if args.bosses or args.entry_check:
         try:
             verified=audit_game_routes(game / 'dvdroot_ps4/param/gameparam/gameparam.parambnd.dcx',ROOT / 'src/boss_destinations.json')
+            scripts=audit_boss_scripts(game)
         except (ValueError,KeyError,OSError) as error:
             parser.error(f'Boss-only route verification failed; game was not launched: {error}')
         print(f'Local game-data preflight passed: {len(verified)} boss-room endpoints verified.')
+        print(f'Local scripts/maps preflight passed: {len(scripts)} activation profiles verified.')
     env['BB_WORLD_WARPER_ROUTE'] = route
-    # v2 is an explicit boss-only route; never reuse the earlier 46-lamp index.
-    progress = run / ('bosses-v2-progress.txt' if args.bosses else f'{route}-progress.txt')
+    # v4 adds first-entry versus repeat-fog handling and confirmed wake-up hits.
+    # Never reuse the earlier timed attempts as successful entrance/phase evidence.
+    progress = run / ('bosses-v4-progress.txt' if args.bosses else 'encounters-v4-progress.txt' if args.encounters else 'entry-check-v4-progress.txt' if args.entry_check else f'{route}-progress.txt')
     env['BB_WORLD_WARPER_STATE'] = str(progress)
     gear_progress = progress.with_suffix('.gear.txt')
     env['BB_WORLD_WARPER_GEAR_STATE'] = str(gear_progress)
     env['BB_WORLD_WARPER_AUTO'] = '1'
     env['BB_WORLD_WARPER_GEAR'] = '0' if args.record_exit or boss_batch else '1'
-    env['BB_WORLD_WARPER_BOSS_HEALTH_STAGES'] = '1' if boss_batch else '0'
+    env['BB_WORLD_WARPER_BOSS_HEALTH_STAGES'] = '1' if boss_batch and not args.entry_check else '0'
+    env['BB_WORLD_WARPER_ENTRY_ONLY'] = '1' if args.entry_check else '0'
     env['BB_WORLD_WARPER_BOSS_RUNS'] = '1' if boss_batch else '0'
     env['BB_WORLD_WARPER_BOSS_STATE'] = str(progress.with_suffix('.boss-attempts.txt'))
     env.pop('BB_WORLD_WARPER_CATHEDRAL_ROUTE', None)
     if args.record_exit:
         env['BB_WORLD_WARPER_RECORD'] = 'cathedral-exit'
         env['BB_PAD_RECORD'] = str(run / 'cathedral-exit.pad')
-    if not (user / 'savedata/1/CUSA00207/SPRJ0005/userdata0000').is_file():
-        parser.error('Automatic Continue requires the imported test character.')
+    if not (ROOT / 'build/save-seed/savedata/1/CUSA00207/SPRJ0005/userdata0000').is_file():
+        parser.error('Automatic Continue requires the imported pristine test seed. Run Start-WorldWarper.cmd first.')
     env['PATH'] = str(args.runtime_bin.resolve()) + os.pathsep + str(install / 'bin') + os.pathsep + env.get('PATH', '')
     command = [str(probe), str(install / 'out/boot-linked.bin'),
                '--content-profile', str(install / 'out/content.bin'),
                '--patches', str(install / 'out/patches.bin'),
                '--app0', str(game), '--user', str(user), '--timeout', '0']
-    if (user / 'savedata/1/CUSA00207/SPRJ0005/userdata0000').is_file():
-        print('Automatic Continue is enabled. Leave the title screen controls untouched.')
-    else:
-        print('First run: choose New Game and create a disposable character. No progressed save is needed.')
+    print('Automatic Continue is enabled. Leave the title screen controls untouched.')
     if args.bosses:
-        print('Boss-only v2: 22 named boss destinations. No ordinary lantern tour and no gear repeat.')
-        print('20 boss-room travel points; Gehrman/Moon Presence entry is not implemented and is reported unavailable without warping.')
-        print('Only eligible loaded actors are exercised; missing bosses and special group/script mechanics are not claimed covered.')
+        print('Boss-only v4: 19 encounters, Micolash excluded, two ending entries unavailable. No gear repeat.')
+        print('One authored outside-gate setup where required, then real entry walking; no fight-time position teleports.')
+        print('Activation/known phase events are checked; stalled entrances and falls are reported incomplete.')
+    elif args.entry_check:
+        print('SHORT ENTRY CHECK: Cleric Beast, Gascoigne, Rom, Ebrietas only. No health phases, gear pass or full tour.')
+        print('Each stop ends once the actual battle event is confirmed. Failures are logged automatically.')
     elif not args.encounters:
         print('All-lamp tour selected; some destinations still need in-game validation.' if args.all_lamps
               else 'Three-area tour: Central Yharnam, Cathedral Ward, Old Yharnam.')
-    if not args.bosses:
+    if not args.bosses and not args.entry_check:
         print('Focused encounter observation: two Upper Cathedral destinations and Cainhurst rooftop; no gear repetition.'
               if args.encounters else 'Combined pass: weapon/armour rotation first, then the lamp tour.')
     print('The disposable save is reset from the pristine download before every launch.')
-    if boss_batch:
-        print('Boss batch: ranged/close windows and boss-specific below-threshold HP requests, based on instance maximum HP.')
-        print('Transition holds do not attack or correct gaps. Group/shared-bar/scripted fights are observation-only.')
-        print('HP requests and animation changes are recorded; actual phase transitions still require observation.')
+    if boss_batch and not args.entry_check:
+        print('Boss batch: ranged then close observation; health requests use current-form and shared-owner maximum HP.')
+        print('Known transitions wait for game events, with a bounded failure timeout. Group encounters remain observation-only.')
+        print('A completed tour does not certify every phase, attack or shader; see the evidence report.')
     print('The game closes 10 seconds after the tour finishes. Log:', run / 'smoke.log')
     if args.record_exit:
         print('RECORDING MODE: automatic travel stops at Cathedral Ward. Automatic exit is disabled.')
@@ -122,11 +128,15 @@ def main():
             code = subprocess.run(command, cwd=run, env=env, stdout=log, stderr=subprocess.STDOUT).returncode
             log.flush()
             report_path=run / f'{route}-report.json'
-            write_report(run / 'smoke.log', report_path)
+            report=write_report(run / 'smoke.log', report_path)
             print('Session evidence report:', report_path)
+            if args.entry_check:
+                for boss in ('ClericBeast','Gascoigne','Rom','Ebrietas'):
+                    result=report['boss_roster'].get(boss,{'status':'not-attempted'})
+                    print(boss+':',result['status'],result.get('reason',''))
             after = progress.read_text() if progress.exists() else ''
             lines = after.splitlines()
-            terminal = len(lines) >= (22 if args.bosses else 44 if args.all_lamps else 3)
+            terminal = len(lines) >= (4 if args.entry_check else 22 if args.bosses else 44 if args.all_lamps else 3)
             failed_load = after != before and lines and lines[-1].startswith('skip ')
             if args.record_exit or (code == 0 and (not failed_load or terminal)):
                 print('Coverage recorded:', sum(line.startswith('done ') for line in lines),

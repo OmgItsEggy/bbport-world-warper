@@ -1,5 +1,92 @@
 # Development status
 
+## Release candidate: v0.1.0-alpha.1
+
+Experimental, not an all-shaders-complete release. Use [QUICKSTART](../QUICKSTART.md).
+The default full workflow runs equipment/44 lanterns, then bosses without a manual
+checkpoint; the test save is reset for each game process. First setup imports the
+original Nexus ZIP and remembers installation/game folders. No author-specific
+paths, Python installation, copied personal save or development runtime is required.
+The save is not redistributed: its author explicitly prohibits reuploads.
+
+### Latest actual-game evidence
+
+- The independent-axis steering correction removed the Rom/Ebrietas circling.
+  Both now confirmed their actual battle events after real approach/attacks.
+- Gascoigne's normal entry confirmed his actual battle event.
+- Cleric Beast's wait now starts **after** reaching the trigger, not while walking
+  toward it. The follow-up full boss run confirmed activation and phase event 12414707.
+- The new executable runs with the regular v1.9.4 installation's DLLs. Embedded
+  launcher Python also successfully loaded the portable setup script.
+- Full boss/phase validation is continuing. Older failure reports below are
+  retained as history; do not infer every remaining phase has been fixed.
+
+### Explicit gaps
+
+Micolash is excluded by request. Gehrman/Moon Presence entry is not implemented.
+Chalice bosses are out of scope. Group phases, exhaustive attacks, Hunter tools,
+usable-item effects and time-of-day variants are not complete. The report records
+attempts, observed events and failures separately. A quiet compile counter is not
+proof that unseen content was compiled.
+
+## Current: entry/wake controller v4 (25 October 2026)
+
+The user's v3 run still failed Cleric Beast, Gascoigne, Rom and Ebrietas. Do not
+treat v3's map-reference audit or regression passes as proof of a working tour.
+
+- Added explicit first-entry versus repeat-fog state. Six authored fog Objects,
+  their yaw/position, first-entry events and fog interaction events are checked
+  against local MSB/EMEVD. A boss-defeat spawn behind a fog gets one fixed setup
+  outside that door, then actual approach/interaction/walking through it. This
+  isolated setup is not a return to boss-relative fight-time repositioning.
+- Rom/Ebrietas approach into body contact, turn through real movement, check
+  facing, request/release repeated R1 attacks and watch hit/battle events. The
+  prior 3.5 m stand-off plus timed button pulse is removed. An input request alone
+  is not a successful hit. Pre-existing hit flags are explicitly logged.
+- Added position/entry-step/attack/activation diagnostics and a short four-boss
+  `--entry-check` mode. It has no gear/health-stage/full-tour pass and prints each
+  activation result. Local shortcut: `Check-Boss-Entrances.cmd`.
+- v4 uses separate progress files, preserving all v3 evidence. Resetting the
+  disposable save before every game process is unchanged.
+- 36 Python tests and seven native regression programs pass. Native simulations
+  include solid fog/repeat entry, boss-body collision, camera-follow rotation,
+  wrong-facing attacks, no contact, missing events and bounded entry placement.
+  These simulate mechanics; v4 is **not yet validated in the actual game**.
+
+Do not ask the user to repeat the full boss batch to debug these four starts.
+The short diagnostic is ready for a future test; no new testing was requested
+from the user during this fix.
+
+Other v3 issues retained from the log: Logarius fell during his later close pass;
+Emissary's giant transition was not confirmed; Laurence's later target was outside
+the local floor checks; Living Failures and Maria stalled on approach. BSB, Paarl
+and Amygdala did produce their requested phase-event evidence. This is not
+exhaustive attack or shader coverage and is not a fully working whole-game pass.
+
+## Current: boss controller v3 (25 October 2026)
+
+Supersedes v2's timed proximity-placement encounters. Full details and primary
+script findings: [Boss script audit](BOSS-SCRIPT-AUDIT.md).
+
+- Removed all boss-relative player-position warps and repeated gap corrections.
+- Added authored entrance walking, actual battle-event gates, Maria chair
+  interaction, closed-loop stick steering and bounded stall/fall handling.
+- Added explicit redirected health owners and event-selected live forms for
+  Gascoigne, Emissary, Ludwig and Orphan; fixed shared-owner/body identification
+  for Wet Nurse, One Reborn and Living Failures.
+- Known transitions wait for event evidence, not just an HP write or timer.
+  Missing transitions end incomplete. AI-only phases remain unclassified;
+  group encounters still have observation-only passes.
+- Excludes Micolash without a warp. Ending entries remain unavailable.
+- Isolates v3 progress, retains older logs/cache, and resets the disposable save
+  before every game process. Failures are retained in the evidence report.
+- Passed local MSB/EMEVD preflight for 19 included profiles, 35 Python tests and
+  six native regression programs. In-game v3 validation is still pending.
+
+Historical v3 handoff: run the existing `Run-Boss-Batch.cmd` for combined validation; the game
+continues across encounters and exits afterward. Report entrance failures,
+falls and missing transformations together, not as individual checkpoints.
+
 ## Complete
 
 - Pinned Supermedo v1.9.4 and Visy v0.7.5 by tag and commit.

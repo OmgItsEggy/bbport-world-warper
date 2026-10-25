@@ -10,11 +10,18 @@ inline constexpr Stop stops[] = {
     {2302950, 0x17000000, "Old Yharnam"},
 };
 inline constexpr unsigned count = sizeof(stops) / sizeof(stops[0]);
+// Fast activation-only regression, no equipment rotation or health-stage tour.
+inline constexpr Stop entry_stops[] = {
+    {2412952,0x18010000,"Cleric Beast entrance",2410800},
+    {2412953,0x18010000,"Gascoigne entrance",2410810},
+    {3202952,0x20000000,"Rom wake-up",3200800},
+    {2422951,0x18020000,"Ebrietas wake-up",2420800},
+};
 // Focused validation: two Upper Cathedral boss destinations plus Cainhurst rooftop.
 inline constexpr Stop encounter_stops[] = {
-    {2422952,0x18020000,"Upper Cathedral Ward"},
-    {2422951,0x18020000,"Upper Cathedral Ward"},
-    {2502952,0x19000000,"Cainhurst rooftop"},
+    {2422952,0x18020000,"Upper Cathedral Ward",2420810},
+    {2422951,0x18020000,"Upper Cathedral Ward",2420800},
+    {2502952,0x19000000,"Cainhurst rooftop",2500800},
 };
 constexpr Stop Lamp(unsigned a, unsigned n, const char* name, unsigned boss=0) {
     return {a * 10000u + 2950u + n, ((a / 10) << 24) | ((a % 10) << 16), name,boss};

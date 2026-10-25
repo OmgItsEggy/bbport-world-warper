@@ -1,5 +1,9 @@
 # Boss-only route v2 audit
 
+Travel endpoint audit only. Encounter activation/phase handling now uses
+[v3's script audit](BOSS-SCRIPT-AUDIT.md). A boss-defeat travel point is not an
+entrance trigger, and v2 timed attempts are not valid phase evidence.
+
 25 October 2026. The earlier `--bosses` implementation mistakenly reused all 44 normal travel lamps plus two ordinary Dream returns. That implementation is superseded; its progress must never be reused for v2.
 
 ## Verified locally, without modifying game data

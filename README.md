@@ -4,6 +4,30 @@ A shader-cache builder for Supermedo's native Bloodborne Windows port. It runs t
 
 The project website is maintained as a dependency-free GitHub Pages site in `docs/`.
 
+## Download and run
+
+[Experimental Windows prerelease](https://github.com/OmgItsEggy/bbport-world-warper/releases/tag/v0.1.0-alpha.1)
+— download `windows-x64.zip`, extract separately from bbport, then double-click
+**Start-WorldWarper.cmd**. [Full instructions for you and your friend](QUICKSTART.md).
+
+The default **Full warm-up** runs weapons/armour, all 44 lantern destinations,
+then the experimental boss/phase batch automatically. It uses the embedded Python
+and runtime libraries in your existing Supermedo **v1.9.4** installation. No build
+tools or separate Python install are needed.
+
+The launcher imports [the original test-save ZIP](https://www.nexusmods.com/bloodborne/mods/619?tab=files&file_id=3156)
+locally and resets a disposable copy before **every** game launch. The save author's
+permissions forbid reuploads, so the save cannot be bundled without permission.
+Never install it over your personal save.
+
+**Experimental, not complete shader coverage.** v4 fixes authored first entry and
+real wake-up hits; actual battle events have now been confirmed for Cleric Beast,
+Gascoigne, Rom and Ebrietas. Several other boss/phase paths still need work.
+See [current status](docs/STATUS.md) and [the script audit](docs/BOSS-SCRIPT-AUDIT.md).
+
+The optional short `--entry-check` diagnostic checks only Cleric Beast, Gascoigne,
+Rom and Ebrietas. Do not repeat the whole boss tour to debug their activation.
+
 ## Target
 
 - Base: `Supermedo/bloodborne_pc` tag `windows-v1.9.4` (`3fabfa7a7af67a34a6dfc630b6ec2539b68fad4d`)
@@ -35,7 +59,16 @@ A custom shader gallery may be added later for repeatable effect coverage, but i
 
 ## Current status
 
-The exact upstream revisions are pinned and the complete world-warper core, rules, generated equipment table, launcher tests and Supermedo benchmark code are present under `reference/`. Save isolation, real-cache selection, in-process controller injection, guarded memory access, bounded image checks, loader registration and the byte-verified main-thread detour are implemented and tested. The next milestone connects that registered image to the tour backend and proves the first live runtime tick.
+The equipment pass and 44-destination lamp tour have completed in actual game
+tests, including automatic load/exit and resumed runs. The boss controller uses
+closed-loop grounded walking, actual battle/hit-event gates and event-selected
+forms/health owners. Its forward and sideways stick directions are measured
+independently; a failed attempt is not reported as confirmed coverage. Item/tool
+gallery, full attack coverage, group phases and ending entries are not complete.
+
+Release source/build details: [BUILD.md](docs/BUILD.md). Corresponding source is
+provided alongside the Windows package; no game files, live saves or GPU caches
+are distributed.
 
 ## Ground rules
 

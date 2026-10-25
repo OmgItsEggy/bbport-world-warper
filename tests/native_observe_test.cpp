@@ -5,6 +5,7 @@
 static std::map<std::uint64_t, unsigned char> memory;
 static unsigned reads;
 namespace BbWorldWarperMemory {
+bool Write(std::uint64_t,const void*,std::size_t) { assert(false); return false; }
 bool Read(std::uint64_t address, void* output, std::size_t size) {
     ++reads;
     auto* bytes = static_cast<unsigned char*>(output);
@@ -35,8 +36,7 @@ int main() {
         assert(std::fabs(-std::cos(yaw)+z/distance)<0.0001f);
     }
     assert(!CutscenePlaying());
-    assert(!ApproachEbrietas(0));
-    assert(!ApproachLogarius(0));
+    assert(!Face(0,0));
     Put<std::uint64_t>(0x5540058,0x1000);
     Put<std::uint64_t>(0x1008,0x2000);
     Put<unsigned char>(0x2168,1);
