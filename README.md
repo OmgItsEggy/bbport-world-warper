@@ -39,6 +39,7 @@ The exact upstream revisions are pinned and the complete world-warper core, rule
 
 ## Ground rules
 
+- Before authoring encounter health levels or phase handling, consult [Boss phase and coverage reference](docs/BOSS-PHASE-REFERENCE.md). Keep documented triggers, implementation requests and verified in-game outcomes separate.
 - Never write to the player's live save. The launcher copies the selected save to a dedicated warper folder.
 - Use `BB_GPU_USER_DIR` for the real shader cache and `BB_USER_DIR` for the temporary save copy.
 - Refuse to start if the Bloodborne 1.09 hook signatures do not match.
