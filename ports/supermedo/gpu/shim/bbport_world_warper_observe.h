@@ -10,6 +10,10 @@
 // Loaded entities are NOT evidence that their materials or attack effects were drawn.
 namespace BbWorldWarperObserve {
 inline std::uint64_t ebrietas = 0;
+// Bloodborne character forward is (-sin(yaw), -cos(yaw)).
+inline float FaceTarget(float from_x, float from_z, float target_x, float target_z) {
+    return std::atan2(from_x-target_x, from_z-target_z);
+}
 template<class T> T Read(std::uint64_t address) {
     T value{}; BbWorldWarperMemory::Get(address, &value); return value;
 }
@@ -36,7 +40,7 @@ inline bool ApproachEbrietas(std::uint64_t player) {
     if (!std::isfinite(distance) || distance>100 || std::fabs(me[1]-boss[1])>8) return false;
     if (distance<0.01f) { dx=0; dz=1; } else { dx/=distance; dz/=distance; }
     alignas(16) float pos[4]={boss[0]+dx*4, boss[1]+0.2f, boss[2]+dz*4,1};
-    alignas(16) float rot[4]={0,std::atan2(boss[0]-pos[0],boss[2]-pos[2]),0,0};
+    alignas(16) float rot[4]={0,FaceTarget(pos[0],pos[2],boss[0],boss[2]),0,0};
     const auto table=Read<std::uint64_t>(player);
     const auto fn=table ? Read<std::uint64_t>(table+0x5f8) : 0;
     const auto base=BbWorldWarperImage::Address(0);

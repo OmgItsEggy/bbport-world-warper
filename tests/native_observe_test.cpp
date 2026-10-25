@@ -26,6 +26,14 @@ template<class T> void Put(std::uint64_t address, T value) {
 }
 int main() {
     using namespace BbWorldWarperObserve;
+    // The forward vector must point toward the target from every quadrant.
+    for (float x : {-4.f,0.f,4.f}) for (float z : {-4.f,0.f,4.f}) {
+        if (x==0 && z==0) continue;
+        const float yaw=FaceTarget(x,z,0,0);
+        const float distance=std::sqrt(x*x+z*z);
+        assert(std::fabs(-std::sin(yaw)+x/distance)<0.0001f);
+        assert(std::fabs(-std::cos(yaw)+z/distance)<0.0001f);
+    }
     assert(!CutscenePlaying());
     assert(!ApproachEbrietas(0));
     Put<std::uint64_t>(0x5540058,0x1000);
