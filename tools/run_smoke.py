@@ -56,7 +56,7 @@ def main():
     else:
         print('First run: choose New Game and create a disposable character. No progressed save is needed.')
     print('Three-area tour: Central Yharnam, Cathedral Ward, Old Yharnam.')
-    print('Each area: movement, attacks/transforms/dodge/firearm, then a fast camera sweep.')
+    print('Combat inputs run once per tour. Later stops use movement and a fast camera sweep only.')
     print('The disposable save is reset from the pristine download before every launch.')
     print('The game closes 10 seconds after the tour finishes. Log:', run / 'smoke.log')
     if args.record_exit:

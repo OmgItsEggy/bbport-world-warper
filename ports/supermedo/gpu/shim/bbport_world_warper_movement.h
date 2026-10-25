@@ -4,8 +4,9 @@
 
 namespace BbWorldWarperMovement {
 struct Input { int lx, ly, rx, ry; unsigned buttons = 0; };
-inline Input At(double elapsed) {
-    if (!std::isfinite(elapsed) || elapsed < 0 || elapsed >= 60) return {-1,-1,-1,-1};
+inline Input At(double elapsed, bool combat = true) {
+    if (!std::isfinite(elapsed) || elapsed < 0 || elapsed >= (combat ? 60 : 38)) return {-1,-1,-1,-1};
+    if (!combat && elapsed >= 18) elapsed += 22;
     // Three short out-and-back loops. Keep the camera still while moving so the
     // intended return direction does not rotate during the loop.
     if (elapsed < 18) {

@@ -21,6 +21,12 @@ int main() {
     assert(At(60).lx == -1);
     assert(At(-1).lx == -1);
     assert(At(std::numeric_limits<double>::infinity()).lx == -1);
+    for (double seconds = 0; seconds < 38; seconds += 0.05) {
+        assert(At(seconds, false).buttons == 0);
+    }
+    assert(At(18, false).rx == 255);
+    assert(At(37.9, false).rx == 255);
+    assert(At(38, false).lx == -1);
     for (const auto& stop : BbWorldWarperRoute::stops) {
         assert(coop::lamptravel::LampOf(stop.lamp, nullptr));
         assert(coop::lamptravel::MapOf(stop.lamp) == stop.map);

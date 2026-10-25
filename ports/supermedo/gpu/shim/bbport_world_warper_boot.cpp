@@ -34,6 +34,7 @@ bool automatic = false;
 bool entered_world = false;
 bool exit_sent = false;
 bool record_exit = false;
+bool combat_done = false;
 BbWorldWarperReplay::Route cathedral_route;
 Clock::time_point settle_until;
 
@@ -157,14 +158,16 @@ void Tick() {
     if (!started) {
         started = true;
         previous = now;
-        std::printf("[warper] coverage pass: movement 18s, combat inputs 22s, camera sweep 20s\n");
+        std::printf("[warper] coverage pass: movement 18s, combat %s, camera sweep 20s\n",
+                    combat_done ? "already covered; skipped" : "22s");
         std::fflush(stdout);
     }
     elapsed += std::chrono::duration<double>(now - previous).count();
     previous = now;
     const bool replaying = tour && route_index == 1 && cathedral_route.Seconds() > 0;
-    const double stop_seconds = replaying ? cathedral_route.Seconds() + 20 : 60;
+    const double stop_seconds = replaying ? cathedral_route.Seconds() + 20 : (combat_done ? 38 : 60);
     if (elapsed >= stop_seconds) {
+        if (!replaying) combat_done = true;
         runtime_pad_director_press(0);
         runtime_pad_director_sticks(-1,-1,-1,-1);
         if (tour) {
@@ -198,7 +201,7 @@ void Tick() {
     }
     runtime_pad_director_press(0);
     if (replaying) { runtime_pad_director_sticks(128,128,255,128); return; }
-    const auto input = BbWorldWarperMovement::At(elapsed);
+    const auto input = BbWorldWarperMovement::At(elapsed, !combat_done);
     runtime_pad_director_sticks(input.lx, input.ly, input.rx, input.ry);
     runtime_pad_director_press(input.buttons);
 }
