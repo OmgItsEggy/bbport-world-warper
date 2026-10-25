@@ -2,7 +2,9 @@
 
 The release includes a separate `corresponding-source.zip`: the complete modified
 Supermedo tree (including initialized Git submodule sources), World Warper sources,
-tests, and the existing upstream copyright/licence notices. No game data is included.
+tests, and the existing upstream copyright/licence notices. Upstream's separate
+benchmark save/recording assets under `launcher/assets/tests` are omitted; they
+are not required to compile the executable or run World Warper. No game data is included.
 The executable is GPL-3.0-or-later; upstream and third-party notices remain applicable.
 Runtime DLLs are **not redistributed** by this add-on; they come from the user's
 existing bbport installation.

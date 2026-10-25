@@ -72,6 +72,10 @@ def main():
         for path in files:
             archive.write(path, Path('world-warper') / path.relative_to(ROOT))
         for path in source_files(upstream):
+            # Upstream tracks a separate benchmark's binary save fixture. It is
+            # not program source and is not needed to build/run this add-on.
+            if path.relative_to(upstream).as_posix().startswith('launcher/assets/tests/'):
+                continue
             if path.is_file():
                 archive.write(path, Path('modified-supermedo') / path.relative_to(upstream))
         # The integration is a set of new untracked files in the build checkout.
