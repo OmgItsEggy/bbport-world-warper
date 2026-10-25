@@ -17,16 +17,43 @@ to warm the cache before normal play.
 ## Run it
 
 1. Close Bloodborne. Double-click **Start-WorldWarper.cmd** in the extracted folder.
-2. Paste your `bbport-windows` folder, then your game-data folder containing
-   `eboot.bin` and `dvdroot_ps4`. Paste the downloaded save ZIP path when asked.
-   These locations are remembered; no Python or compiler installation is needed.
-3. Choose **1** for the **full warm-up: weapons/armour + all 44 lanterns + boss/phase
+
+2. **When asked for the bbport folder:** open File Explorer and find the folder
+   containing the **Bloodborne.exe launcher**, alongside its `bin` and `out`
+   folders. Open that folder, press **Ctrl+L**, then **Ctrl+C** to copy its address.
+   Return to the command window, paste with **Ctrl+V**, and press **Enter**.
+   Supply the folder address, **not** the path to `Bloodborne.exe` or to `bin`.
+
+   Example folder address: `D:\Games\Bloodborne\bbport-windows`
+
+3. **When asked for the game-data folder:** find the folder that contains **both
+   `eboot.bin` and the `dvdroot_ps4` folder**. Open it in File Explorer and copy its
+   address with **Ctrl+L**, **Ctrl+C**. Paste into the command window and press
+   **Enter**. Do not select `eboot.bin` itself or open `dvdroot_ps4` and copy that
+   subfolder's address.
+
+   Example folder address: `D:\Games\Bloodborne\CUSA03173`
+
+4. **When asked for the save ZIP:** find the original downloaded test-save ZIP,
+   usually in Downloads. Hold **Shift**, right-click the ZIP file, and choose
+   **Copy as path**. Paste into the command window and press **Enter**. This time
+   supply the path to the **ZIP file itself**, not its containing folder. Leave
+   the ZIP unextracted; World Warper imports it automatically.
+
+   These examples are not fixed install locations—use your actual folder and
+   file paths. Folder choices and the imported test seed are remembered, so these
+   prompts are normally only needed on first setup. No separate Python or
+   compiler installation is needed.
+
+5. Choose **1** for the **full warm-up: weapons/armour + all 44 lanterns + boss/phase
    batch**, automatically in that order. Choose **2** for the four-entrance diagnostic,
    **3** for bosses only, or **4** for equipment/lanterns only.
-4. Leave the controls alone. It selects Continue and closes automatically. Full
+
+6. Leave the controls alone. It selects Continue and closes automatically. Full
    warm-up relaunches once between lanterns and bosses, resetting the test save.
    To cancel the whole job, close the command window and then the game window.
-5. Start Bloodborne normally through your usual launcher afterward. Keep the same
+
+7. Start Bloodborne normally through your usual launcher afterward. Keep the same
    renderer settings/driver for the most useful cache reuse.
 
 Boss batch requests ranged and close observation and lower-health stages. It
