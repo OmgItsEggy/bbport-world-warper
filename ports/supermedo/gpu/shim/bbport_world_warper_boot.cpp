@@ -56,6 +56,8 @@ std::uint64_t compile_serial = 0;
 Clock::time_point compile_quiet_since;
 bool encounter_watch = false;
 bool ebrietas_approached = false;
+bool logarius_approached = false;
+unsigned logarius_refresh = 0;
 
 bool GearTick(Clock::time_point now) {
     if (!gear_enabled || gear_row >= BbWorldWarperGear::rows) return false;
@@ -247,9 +249,15 @@ void Tick() {
         previous = now;
         encounter_watch = BbWorldWarperObserve::Census(world, player, tour ? route_stops[route_index].lamp : 2412950, "start");
         ebrietas_approached = false;
+        logarius_approached = false;
+        logarius_refresh = 0;
         if (tour && (route_stops[route_index].lamp == 2422951 || route_stops[route_index].lamp == 2422952)) {
             ebrietas_approached = BbWorldWarperObserve::ApproachEbrietas(player);
             std::printf("[warper] Ebrietas targeted approach %s\n",ebrietas_approached ? "requested" : "unavailable; coverage remains unverified");
+        }
+        if (tour && route_stops[route_index].lamp == 2502952) {
+            logarius_approached = BbWorldWarperObserve::ApproachLogarius(player);
+            std::printf("[warper] Logarius targeted approach %s\n",logarius_approached ? "requested" : "unavailable; coverage remains unverified");
         }
         compile_start = BbWorldWarperCompile::Read();
         compile_serial = compile_start.serial;
@@ -262,7 +270,7 @@ void Tick() {
     elapsed += std::chrono::duration<double>(now - previous).count();
     previous = now;
     const bool replaying = tour && route_stops[route_index].lamp == 2402950 && cathedral_route.Seconds() > 0;
-    const double stop_seconds = ebrietas_approached ? 60 : (replaying ? cathedral_route.Seconds() + 20 : (combat_done ? 38 : 60));
+    const double stop_seconds = (ebrietas_approached || logarius_approached) ? 60 : (replaying ? cathedral_route.Seconds() + 20 : (combat_done ? 38 : 60));
     const auto counters = BbWorldWarperCompile::Read();
     if (counters.active || counters.serial != compile_serial) {
         compile_serial = counters.serial;
@@ -301,7 +309,11 @@ void Tick() {
         std::fflush(stdout);
         return;
     }
-    if (ebrietas_approached) {
+    if (ebrietas_approached || logarius_approached) {
+        if (logarius_approached && logarius_refresh<3 && elapsed>=20*(logarius_refresh+1)) {
+            ++logarius_refresh;
+            BbWorldWarperObserve::ApproachLogarius(player,true);
+        }
         // Let placement/activation settle; then observe without retreating to the lamp.
         // Brief R1 attempts may provoke her; neither input nor proximity proves activation.
         const bool hit=(elapsed>=8 && elapsed<8.2) || (elapsed>=10 && elapsed<10.2);

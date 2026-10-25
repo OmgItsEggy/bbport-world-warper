@@ -36,6 +36,7 @@ int main() {
     }
     assert(!CutscenePlaying());
     assert(!ApproachEbrietas(0));
+    assert(!ApproachLogarius(0));
     Put<std::uint64_t>(0x5540058,0x1000);
     Put<std::uint64_t>(0x1008,0x2000);
     Put<unsigned char>(0x2168,1);
