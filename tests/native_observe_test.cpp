@@ -18,6 +18,7 @@ bool Read(std::uint64_t address, void* output, std::size_t size) {
 }
 namespace BbWorldWarperImage {
 std::uint64_t Address(std::uint64_t offset) { return offset; }
+std::uint64_t Size() { return 0; }
 }
 template<class T> void Put(std::uint64_t address, T value) {
     const auto* bytes=reinterpret_cast<unsigned char*>(&value);
@@ -26,6 +27,7 @@ template<class T> void Put(std::uint64_t address, T value) {
 int main() {
     using namespace BbWorldWarperObserve;
     assert(!CutscenePlaying());
+    assert(!ApproachEbrietas(0));
     Put<std::uint64_t>(0x5540058,0x1000);
     Put<std::uint64_t>(0x1008,0x2000);
     Put<unsigned char>(0x2168,1);

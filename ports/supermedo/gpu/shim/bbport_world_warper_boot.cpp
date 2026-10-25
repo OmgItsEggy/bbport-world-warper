@@ -55,6 +55,7 @@ BbWorldWarperCompile::Snapshot compile_start{};
 std::uint64_t compile_serial = 0;
 Clock::time_point compile_quiet_since;
 bool encounter_watch = false;
+bool ebrietas_approached = false;
 
 bool GearTick(Clock::time_point now) {
     if (!gear_enabled || gear_row >= BbWorldWarperGear::rows) return false;
@@ -245,6 +246,11 @@ void Tick() {
         started = true;
         previous = now;
         encounter_watch = BbWorldWarperObserve::Census(world, player, tour ? route_stops[route_index].lamp : 2412950, "start");
+        ebrietas_approached = false;
+        if (tour && (route_stops[route_index].lamp == 2422951 || route_stops[route_index].lamp == 2422952)) {
+            ebrietas_approached = BbWorldWarperObserve::ApproachEbrietas(player);
+            std::printf("[warper] Ebrietas targeted approach %s\n",ebrietas_approached ? "requested" : "unavailable; coverage remains unverified");
+        }
         compile_start = BbWorldWarperCompile::Read();
         compile_serial = compile_start.serial;
         compile_quiet_since = now;
@@ -256,7 +262,7 @@ void Tick() {
     elapsed += std::chrono::duration<double>(now - previous).count();
     previous = now;
     const bool replaying = tour && route_stops[route_index].lamp == 2402950 && cathedral_route.Seconds() > 0;
-    const double stop_seconds = replaying ? cathedral_route.Seconds() + 20 : (combat_done ? 38 : 60);
+    const double stop_seconds = ebrietas_approached ? 60 : (replaying ? cathedral_route.Seconds() + 20 : (combat_done ? 38 : 60));
     const auto counters = BbWorldWarperCompile::Read();
     if (counters.active || counters.serial != compile_serial) {
         compile_serial = counters.serial;
@@ -293,6 +299,14 @@ void Tick() {
         finish_time = now;
         std::printf("[warper] movement and sweep complete after %.1f active seconds; quit normally\n", elapsed);
         std::fflush(stdout);
+        return;
+    }
+    if (ebrietas_approached) {
+        // Let placement/activation settle; then observe without retreating to the lamp.
+        // Brief R1 attempts may provoke her; neither input nor proximity proves activation.
+        const bool hit=(elapsed>=8 && elapsed<8.2) || (elapsed>=10 && elapsed<10.2);
+        runtime_pad_director_press(hit ? 0x800 : 0);
+        runtime_pad_director_sticks(128,128,elapsed<3 ? 128 : 180,128);
         return;
     }
     if (elapsed >= stop_seconds) {
