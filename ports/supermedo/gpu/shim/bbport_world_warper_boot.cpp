@@ -6,6 +6,7 @@
 #include "bbport_world_warper_route.h"
 #include "bbport_world_warper_replay.h"
 #include "bbport_world_warper_gear.h"
+#include "bbport_world_warper_observe.h"
 #include <chrono>
 #include <cstdio>
 #include <cstdlib>
@@ -48,6 +49,7 @@ unsigned gear_row = 0;
 double gear_elapsed = 0;
 unsigned gear_failures = 0;
 const char* gear_state_path = nullptr;
+bool cinematic_wait = false;
 
 bool GearTick(Clock::time_point now) {
     if (!gear_enabled || gear_row >= BbWorldWarperGear::rows) return false;
@@ -220,10 +222,24 @@ void Tick() {
         runtime_pad_director_sticks(128,128,128,128);
         return;
     }
+    const bool cinematic = BbWorldWarperObserve::CutscenePlaying();
+    if (cinematic != cinematic_wait) {
+        cinematic_wait = cinematic;
+        std::printf("[warper] cutscene %s: coverage clock %s\n",
+                    cinematic ? "started" : "ended", cinematic ? "paused" : "resuming");
+        std::fflush(stdout);
+    }
+    if (cinematic) {
+        runtime_pad_director_press(0);
+        runtime_pad_director_sticks(128,128,128,128);
+        previous = now;
+        return;
+    }
     if (GearTick(now)) return;
     if (!started) {
         started = true;
         previous = now;
+        BbWorldWarperObserve::Census(world, player, tour ? route_stops[route_index].lamp : 2412950, "start");
         std::printf("[warper] coverage pass: movement 18s, combat %s, camera sweep 20s\n",
                     combat_done ? "already covered; skipped" : "22s");
         std::fflush(stdout);
@@ -233,6 +249,7 @@ void Tick() {
     const bool replaying = tour && route_stops[route_index].lamp == 2402950 && cathedral_route.Seconds() > 0;
     const double stop_seconds = replaying ? cathedral_route.Seconds() + 20 : (combat_done ? 38 : 60);
     if (elapsed >= stop_seconds) {
+        BbWorldWarperObserve::Census(world, player, tour ? route_stops[route_index].lamp : 2412950, "end");
         if (!replaying) combat_done = true;
         runtime_pad_director_press(0);
         runtime_pad_director_sticks(-1,-1,-1,-1);
