@@ -8,7 +8,7 @@ The project website is maintained as a dependency-free GitHub Pages site in `doc
 
 [Experimental Windows prerelease](https://github.com/OmgItsEggy/bbport-world-warper/releases/tag/v0.1.0-alpha.1)
 — download `windows-x64.zip`, extract separately from bbport, then double-click
-**Start-WorldWarper.cmd**. [Full instructions for you and your friend](QUICKSTART.md).
+**Start-WorldWarper.cmd**. [Installation and usage guide](QUICKSTART.md).
 
 The default **Full warm-up** runs weapons/armour, all 44 lantern destinations,
 then the experimental boss/phase batch automatically. It uses the embedded Python

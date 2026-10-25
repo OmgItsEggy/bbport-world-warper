@@ -1,12 +1,12 @@
 # World Warper: start here
 
-This is an **experimental cache warm-up add-on**, not the game and not a promise
-that every shader or boss attack is covered. It can reduce first-encounter
-compilation hitches; it cannot turn GPU-limited 47 FPS into 60 FPS.
+World Warper is an **experimental shader-cache warm-up tool** for Supermedo's
+Bloodborne PC port. It automates equipment, lantern and boss encounter passes
+to warm the cache before normal play.
 
-## What your friend needs
+## Requirements
 
-- Windows x64, a working **Supermedo bbport v1.9.4** installation, and their own
+- Windows x64, a working **Supermedo bbport v1.9.4** installation, and your own
   prepared Bloodborne **1.09** game files. Run the normal game successfully first.
 - Download the `windows-x64.zip` asset from this project's GitHub prerelease;
   extract it into a normal writable folder. Do **not** overwrite your bbport folder.
