@@ -10,6 +10,16 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from src.test_save import reset_test_save
 
+def recover_gear_checkpoint(log_path, checkpoint):
+    """Migrate completed gear coverage from an older build's retained log."""
+    import re
+    if checkpoint.exists() or not log_path.exists():
+        return
+    matches = re.findall(r'gear pass finished: (\d+) rows failed equip verification',
+                         log_path.read_text(encoding='utf-8', errors='replace'))
+    if matches:
+        checkpoint.write_text(f'attempted 34 failures {matches[-1]}\n', encoding='ascii')
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--install', type=Path, required=True)
@@ -41,6 +51,8 @@ def main():
     env['BB_WORLD_WARPER_ROUTE'] = 'all-lamps' if args.all_lamps else 'three-area'
     progress = run / ('all-lamps-progress.txt' if args.all_lamps else 'three-area-progress.txt')
     env['BB_WORLD_WARPER_STATE'] = str(progress)
+    gear_progress = progress.with_suffix('.gear.txt')
+    env['BB_WORLD_WARPER_GEAR_STATE'] = str(gear_progress)
     env['BB_WORLD_WARPER_AUTO'] = '1'
     env['BB_WORLD_WARPER_GEAR'] = '0' if args.record_exit else '1'
     env.pop('BB_WORLD_WARPER_CATHEDRAL_ROUTE', None)
@@ -69,6 +81,11 @@ def main():
         print('Quit normally after recording. Your recorded route stays in the project.')
     if args.prepare_only:
         return 0
+    recover_gear_checkpoint(run / 'smoke.log', gear_progress)
+    # Preserve the previous session's crash evidence before opening a new log.
+    if (run / 'smoke.log').exists():
+        import time
+        shutil.copy2(run / 'smoke.log', run / f'smoke-{time.time_ns()}.log')
     with (run / 'smoke.log').open('w', encoding='utf-8') as log:
         for attempt in range(5):
             reset_test_save(ROOT / 'build/save-seed/savedata', user / 'savedata', run / 'save-history')

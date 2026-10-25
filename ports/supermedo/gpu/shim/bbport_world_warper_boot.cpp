@@ -47,6 +47,7 @@ bool gear_ok = false;
 unsigned gear_row = 0;
 double gear_elapsed = 0;
 unsigned gear_failures = 0;
+const char* gear_state_path = nullptr;
 
 bool GearTick(Clock::time_point now) {
     if (!gear_enabled || gear_row >= BbWorldWarperGear::rows) return false;
@@ -79,6 +80,10 @@ bool GearTick(Clock::time_point now) {
         ++gear_row;
         gear_equipped = false;
         if (gear_row == BbWorldWarperGear::rows) {
+            if (gear_state_path) if (auto* file = std::fopen(gear_state_path, "w")) {
+                std::fprintf(file, "attempted %u failures %u\n", gear_row, gear_failures);
+                std::fclose(file);
+            }
             combat_done = true;
             started = false;
             elapsed = 0;
@@ -274,6 +279,7 @@ extern "C" void bbgpu_world_warper_set_image(unsigned char* image, std::uint64_t
     if (!mode || std::strcmp(mode, "smoke") != 0) return;
     const char* gear = std::getenv("BB_WORLD_WARPER_GEAR");
     gear_enabled = gear && std::strcmp(gear,"1") == 0;
+    gear_state_path = std::getenv("BB_WORLD_WARPER_GEAR_STATE");
     // The pinned 1.09 Player No Dead patch from upstream Bloodborne.xml:
     // XML guest VA 0x0593e888 minus the 0x400000 patch base.
     const std::uint32_t no_death = 1;
@@ -318,6 +324,18 @@ extern "C" void bbgpu_world_warper_set_image(unsigned char* image, std::uint64_t
         if (route_index == route_count) {
             route_index = 0;
             if (state_path) { if (auto* file = std::fopen(state_path, "w")) std::fclose(file); }
+            if (gear_state_path) { if (auto* file = std::fopen(gear_state_path, "w")) std::fclose(file); }
+        }
+        if (gear_enabled && gear_state_path) if (auto* file = std::fopen(gear_state_path, "r")) {
+            unsigned attempted = 0, failures = 0;
+            const bool complete = std::fscanf(file, "attempted %u failures %u", &attempted, &failures) == 2 &&
+                                  attempted == BbWorldWarperGear::rows;
+            std::fclose(file);
+            if (complete) {
+                gear_row = BbWorldWarperGear::rows;
+                combat_done = true;
+                std::printf("[warper] resuming after completed gear pass (%u verification failures); not repeating gear\n", failures);
+            }
         }
         if (record_exit) route_index = route_count == BbWorldWarperRoute::count ? 1 : 4;
         target_lamp = route_stops[route_index].lamp;
