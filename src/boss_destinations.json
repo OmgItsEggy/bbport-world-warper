@@ -1,0 +1,28 @@
+{
+  "version": "bosses-v2",
+  "verification": "Local Bloodborne 1.09 ReturnPointParam row IDs, map bytes and boss-defeat row labels; no ordinary travel lamps",
+  "destinations": [
+    {"boss": "ClericBeast", "entity": 2410800, "lamp": 2412952},
+    {"boss": "Gascoigne", "entity": 2410810, "lamp": 2412953},
+    {"boss": "BloodStarvedBeast", "entity": 2300800, "lamp": 2302951},
+    {"boss": "Amelia", "entity": 2400800, "lamp": 2402951},
+    {"boss": "Witches", "entity": 2200800, "lamp": 2202951},
+    {"boss": "Paarl", "entity": 2300810, "lamp": 2302952},
+    {"boss": "Shadows", "entity": 2700800, "lamp": 2702951},
+    {"boss": "Rom", "entity": 3200800, "lamp": 3202952},
+    {"boss": "OneReborn", "entity": 2800800, "lamp": 2802951},
+    {"boss": "Amygdala", "entity": 3300800, "lamp": 3302951},
+    {"boss": "Micolash", "entity": 2600850, "lamp": 2602952},
+    {"boss": "WetNurse", "entity": 2600800, "lamp": 2602951},
+    {"boss": "Logarius", "entity": 2500800, "lamp": 2502952},
+    {"boss": "Emissary", "entity": 2420810, "lamp": 2422952},
+    {"boss": "Ebrietas", "entity": 2420800, "lamp": 2422951},
+    {"boss": "Gehrman", "entity": 2100800, "lamp": 0, "blocked": "No verified ending-arena entry/state handling; do not substitute the ordinary Dream return"},
+    {"boss": "MoonPresence", "entity": 2100810, "lamp": 0, "blocked": "No verified ending-arena entry/state handling; do not substitute the ordinary Dream return"},
+    {"boss": "Ludwig", "entity": 3400800, "lamp": 3402952},
+    {"boss": "Laurence", "entity": 3400850, "lamp": 3402953},
+    {"boss": "LivingFailures", "entity": 3500850, "lamp": 3502952},
+    {"boss": "Maria", "entity": 3500800, "lamp": 3502951},
+    {"boss": "Orphan", "entity": 3600800, "lamp": 3602952}
+  ]
+}

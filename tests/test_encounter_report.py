@@ -22,3 +22,8 @@ class EncounterReportTests(unittest.TestCase):
                          '[warper] boss-attempt boss=Witches result=scripted-observation-only; NOT exhaustive coverage\n')
         self.assertEqual(report['boss_roster']['Ludwig']['status'],'not-attempted-this-session')
         self.assertEqual(report['boss_roster']['Witches']['status'],'scripted-observation-only')
+
+    def test_blocked_ending_entry_has_explicit_status(self):
+        report=summarize('[warper] boss-roster boss=Gehrman previous-attempt=no special=no\n'
+                         '[warper] boss-unavailable boss=Gehrman reason=ending-arena-entry-not-implemented; no ordinary Dream warp substituted\n')
+        self.assertEqual(report['boss_roster']['Gehrman']['status'],'unavailable-ending-arena-entry-not-implemented')

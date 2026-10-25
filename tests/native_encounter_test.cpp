@@ -53,7 +53,9 @@ int main() {
     BbWorldWarperObserve::actors={{boss,2500800}};
     BbWorldWarperEncounter::attempted.clear();
     BbWorldWarperEncounter::Run run;
-    run.Begin(2502952,player,true);
+    run.Begin(2412953,player,true,0,2410810);
+    assert(!run.Active()); // a nearby Logarius must never substitute for expected Gascoigne
+    run.Begin(2502952,player,true,0,2500800);
     assert(run.Active() && run.Seconds()==105);
     run.Tick(0); assert(writes==0 && placements==1 && placed_x==14);
     run.Tick(20); assert(writes==0 && placements==2 && placed_x==3);

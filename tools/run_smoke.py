@@ -10,6 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from src.test_save import reset_test_save
 from src.encounter_report import write_report
+from tools.inspect_return_points import audit_game_routes
 
 def recover_gear_checkpoint(log_path, checkpoint):
     """Migrate completed gear coverage from an older build's retained log."""
@@ -55,8 +56,15 @@ def main():
         parser.error('Select only one tour/recording mode')
     route = 'bosses' if args.bosses else ('encounters' if args.encounters else ('all-lamps' if args.all_lamps else 'three-area'))
     boss_batch=args.encounters or args.bosses
+    if args.bosses:
+        try:
+            verified=audit_game_routes(game / 'dvdroot_ps4/param/gameparam/gameparam.parambnd.dcx',ROOT / 'src/boss_destinations.json')
+        except (ValueError,KeyError,OSError) as error:
+            parser.error(f'Boss-only route verification failed; game was not launched: {error}')
+        print(f'Local game-data preflight passed: {len(verified)} boss-room endpoints verified.')
     env['BB_WORLD_WARPER_ROUTE'] = route
-    progress = run / f'{route}-progress.txt'
+    # v2 is an explicit boss-only route; never reuse the earlier 46-lamp index.
+    progress = run / ('bosses-v2-progress.txt' if args.bosses else f'{route}-progress.txt')
     env['BB_WORLD_WARPER_STATE'] = str(progress)
     gear_progress = progress.with_suffix('.gear.txt')
     env['BB_WORLD_WARPER_GEAR_STATE'] = str(gear_progress)
@@ -81,7 +89,8 @@ def main():
     else:
         print('First run: choose New Game and create a disposable character. No progressed save is needed.')
     if args.bosses:
-        print('Full non-Chalice boss batch: 22-boss roster, 44 lamp stops plus two Dream visits. No gear repeat.')
+        print('Boss-only v2: 22 named boss destinations. No ordinary lantern tour and no gear repeat.')
+        print('20 boss-room travel points; Gehrman/Moon Presence entry is not implemented and is reported unavailable without warping.')
         print('Only eligible loaded actors are exercised; missing bosses and special group/script mechanics are not claimed covered.')
     elif not args.encounters:
         print('All-lamp tour selected; some destinations still need in-game validation.' if args.all_lamps
@@ -117,7 +126,7 @@ def main():
             print('Session evidence report:', report_path)
             after = progress.read_text() if progress.exists() else ''
             lines = after.splitlines()
-            terminal = len(lines) >= (46 if args.bosses else 44 if args.all_lamps else 3)
+            terminal = len(lines) >= (22 if args.bosses else 44 if args.all_lamps else 3)
             failed_load = after != before and lines and lines[-1].startswith('skip ')
             if args.record_exit or (code == 0 and (not failed_load or terminal)):
                 print('Coverage recorded:', sum(line.startswith('done ') for line in lines),

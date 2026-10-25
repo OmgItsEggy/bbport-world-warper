@@ -71,11 +71,12 @@ class Run {
 public:
     bool Active() const { return spec!=nullptr; }
     double Seconds() const { return aborted?0:Duration(plan.data(),static_cast<unsigned>(plan.size())); }
-    void Begin(unsigned stop,std::uint64_t local_player,bool allow_phases,std::uint64_t local_world=0) {
+    void Begin(unsigned stop,std::uint64_t local_player,bool allow_phases,std::uint64_t local_world=0,unsigned expected_boss=0) {
         *this=Run{}; player=local_player; phases=allow_phases; world=local_world; lamp=stop;
         float me[3]{}; if(!BbWorldWarperObserve::Position(player,me)) return;
         float nearest=100;
         for(const auto& boss:bosses) if(!attempted.count(boss.name)) {
+            if(expected_boss && !Matches(boss,expected_boss)) continue;
             for(const auto& actor:BbWorldWarperObserve::actors) if(Matches(boss,actor.entity)) {
                 float p[3]{};
                 if(!BbWorldWarperObserve::Position(actor.chr,p)||std::fabs(me[1]-p[1])>8) continue;
@@ -83,7 +84,7 @@ public:
                 if(distance<nearest) { nearest=distance; spec=&boss; target=actor.chr; entity=actor.entity; }
             }
         }
-        if(!spec) { std::printf("[warper] boss-stop lamp=%u no-unattempted-living-boss-within-placement-bounds\n",lamp); return; }
+        if(!spec) { std::printf("[warper] boss-stop lamp=%u expected=%u missing-inactive-already-attempted-or-out-of-bounds; no substitute boss selected\n",lamp,expected_boss); return; }
         const auto dm=Damage();
         const int hp=dm?Read<int>(dm+0xf8):0;
         const int maxhp=dm?Read<int>(dm+0xfc):0; // pinned reference party_balance.cpp:16

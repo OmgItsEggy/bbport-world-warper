@@ -148,6 +148,16 @@ void Tick() {
         }
         return;
     }
+    if(tour && boss_runs_enabled && route_index<route_count && !route_stops[route_index].lamp) {
+        std::printf("[warper] boss-unavailable boss=%s reason=ending-arena-entry-not-implemented; no ordinary Dream warp substituted\n",route_stops[route_index].name);
+        if(state_path) if(auto* file=std::fopen(state_path,"a")) { std::fprintf(file,"skip 0\n"); std::fclose(file); }
+        ++route_index;
+        started=false; warp_requested=false; saw_loading=false; elapsed=0;
+        if(route_index<route_count) target_lamp=route_stops[route_index].lamp;
+        else { finished=true; finish_time=now; }
+        std::fflush(stdout);
+        return;
+    }
     if (target_lamp && warp_requested && std::chrono::duration<double>(now - warp_time).count() > 120) {
         SkipStop(now, "arrival timeout");
         return;
@@ -249,7 +259,7 @@ void Tick() {
         started = true;
         previous = now;
         encounter_watch = BbWorldWarperObserve::Census(world, player, tour ? route_stops[route_index].lamp : 2412950, "start");
-        if(boss_runs_enabled) boss_run.Begin(tour ? route_stops[route_index].lamp : 0,player,boss_health_stages,world);
+        if(boss_runs_enabled) boss_run.Begin(tour ? route_stops[route_index].lamp : 0,player,boss_health_stages,world,tour?route_stops[route_index].boss:0);
         compile_start = BbWorldWarperCompile::Read();
         compile_serial = compile_start.serial;
         compile_quiet_since = now;
@@ -261,13 +271,14 @@ void Tick() {
     elapsed += std::chrono::duration<double>(now - previous).count();
     previous = now;
     const bool replaying = tour && route_stops[route_index].lamp == 2402950 && cathedral_route.Seconds() > 0;
-    const double stop_seconds = boss_run.Active() ? boss_run.Seconds() : (replaying ? cathedral_route.Seconds() + 20 : (combat_done ? 38 : 60));
+    const bool targeted_stop=boss_runs_enabled && tour && route_stops[route_index].boss;
+    const double stop_seconds = boss_run.Active() ? boss_run.Seconds() : targeted_stop ? 0 : (replaying ? cathedral_route.Seconds() + 20 : (combat_done ? 38 : 60));
     const auto counters = BbWorldWarperCompile::Read();
     if (counters.active || counters.serial != compile_serial) {
         compile_serial = counters.serial;
         compile_quiet_since = now;
     }
-    const double coverage_seconds = stop_seconds + (encounter_watch && !boss_run.Active() ? 20 : 0);
+    const double coverage_seconds = stop_seconds + (encounter_watch && !boss_run.Active() && !targeted_stop ? 20 : 0);
     const bool quiet = !counters.active && std::chrono::duration<double>(now-compile_quiet_since).count() >= 3;
     if (elapsed >= coverage_seconds && (quiet || elapsed >= coverage_seconds + 15)) {
         boss_run.Finish();
@@ -305,6 +316,11 @@ void Tick() {
         const auto input=boss_run.Tick(elapsed);
         runtime_pad_director_press(input.buttons);
         runtime_pad_director_sticks(input.lx,input.ly,input.rx,input.ry);
+        return;
+    }
+    if(targeted_stop) {
+        runtime_pad_director_press(0);
+        runtime_pad_director_sticks(128,128,128,128);
         return;
     }
     if (elapsed >= stop_seconds) {

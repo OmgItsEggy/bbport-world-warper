@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <array>
 namespace BbWorldWarperRoute {
-struct Stop { std::uint32_t lamp, map; const char* name; };
+struct Stop { std::uint32_t lamp, map; const char* name; std::uint32_t boss=0; };
 inline constexpr Stop stops[] = {
     {2412950, 0x18010000, "Central Yharnam"},
     {2402950, 0x18000000, "Cathedral Ward"},
@@ -16,8 +16,8 @@ inline constexpr Stop encounter_stops[] = {
     {2422951,0x18020000,"Upper Cathedral Ward"},
     {2502952,0x19000000,"Cainhurst rooftop"},
 };
-constexpr Stop Lamp(unsigned a, unsigned n, const char* name) {
-    return {a * 10000u + 2950u + n, ((a / 10) << 24) | ((a % 10) << 16), name};
+constexpr Stop Lamp(unsigned a, unsigned n, const char* name, unsigned boss=0) {
+    return {a * 10000u + 2950u + n, ((a / 10) << 24) | ((a % 10) << 16), name,boss};
 }
 inline constexpr Stop all_stops[] = {
     Lamp(241,0,"Central Yharnam"), Lamp(241,1,"Central Yharnam"), Lamp(241,2,"Central Yharnam"), Lamp(241,3,"Central Yharnam"),
@@ -35,14 +35,30 @@ inline constexpr Stop all_stops[] = {
     Lamp(360,0,"Fishing Hamlet"), Lamp(360,1,"Fishing Hamlet"), Lamp(360,2,"Fishing Hamlet"),
 };
 inline constexpr unsigned all_count = sizeof(all_stops) / sizeof(all_stops[0]);
-constexpr auto MakeBossStops() {
-    std::array<Stop,all_count+2> result{};
-    for(unsigned i=0;i<all_count;++i) result[i]=all_stops[i];
-    // Common event 7200's documented Dream return point. Two visits allow two
-    // eligible ending bosses to be considered independently; no ending flags forced.
-    result[all_count]={2102950,0x15000000,"Hunter's Dream / ending encounters"};
-    result[all_count+1]=result[all_count];
-    return result;
-}
-inline constexpr auto boss_stops=MakeBossStops();
+// Explicit boss destinations audited against local 1.09 ReturnPointParam names.
+// Keep synchronized with src/boss_destinations.json; tests reject normal lamps.
+inline constexpr std::array<Stop,22> boss_stops{{
+    Lamp(241,2,"Cleric Beast",2410800),
+    Lamp(241,3,"Father Gascoigne",2410810),
+    Lamp(230,1,"Blood-starved Beast",2300800),
+    Lamp(240,1,"Vicar Amelia",2400800),
+    Lamp(220,1,"Witches of Hemwick",2200800),
+    Lamp(230,2,"Darkbeast Paarl",2300810),
+    Lamp(270,1,"Shadows of Yharnam",2700800),
+    Lamp(320,2,"Rom",3200800),
+    Lamp(280,1,"The One Reborn",2800800),
+    Lamp(330,1,"Amygdala",3300800),
+    Lamp(260,2,"Micolash",2600850),
+    Lamp(260,1,"Mergo's Wet Nurse",2600800),
+    Lamp(250,2,"Martyr Logarius",2500800),
+    Lamp(242,2,"Celestial Emissary",2420810),
+    Lamp(242,1,"Ebrietas",2420800),
+    {0,0x15000000,"Gehrman",2100800}, // unavailable ending entry; never warp to ordinary Dream
+    {0,0x15000000,"MoonPresence",2100810},
+    Lamp(340,2,"Ludwig",3400800),
+    Lamp(340,3,"Laurence",3400850),
+    Lamp(350,2,"Living Failures",3500850),
+    Lamp(350,1,"Lady Maria",3500800),
+    Lamp(360,2,"Orphan of Kos",3600800),
+}};
 }
