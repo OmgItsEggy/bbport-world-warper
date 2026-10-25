@@ -42,6 +42,7 @@ def main():
     progress = run / ('all-lamps-progress.txt' if args.all_lamps else 'three-area-progress.txt')
     env['BB_WORLD_WARPER_STATE'] = str(progress)
     env['BB_WORLD_WARPER_AUTO'] = '1'
+    env['BB_WORLD_WARPER_GEAR'] = '0' if args.record_exit else '1'
     env.pop('BB_WORLD_WARPER_CATHEDRAL_ROUTE', None)
     if args.record_exit:
         env['BB_WORLD_WARPER_RECORD'] = 'cathedral-exit'
@@ -59,7 +60,7 @@ def main():
         print('First run: choose New Game and create a disposable character. No progressed save is needed.')
     print('All-lamp tour selected; some destinations still need in-game validation.' if args.all_lamps
           else 'Three-area tour: Central Yharnam, Cathedral Ward, Old Yharnam.')
-    print('Combat inputs run once per tour. Later stops use movement and a fast camera sweep only.')
+    print('Combined pass: weapon/armour rotation first, then the lamp tour.')
     print('The disposable save is reset from the pristine download before every launch.')
     print('The game closes 10 seconds after the tour finishes. Log:', run / 'smoke.log')
     if args.record_exit:

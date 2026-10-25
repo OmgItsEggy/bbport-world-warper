@@ -5,6 +5,7 @@
 #include "bbport_world_warper_movement.h"
 #include "bbport_world_warper_route.h"
 #include "bbport_world_warper_replay.h"
+#include "bbport_world_warper_gear.h"
 #include <chrono>
 #include <cstdio>
 #include <cstdlib>
@@ -39,6 +40,55 @@ bool record_exit = false;
 bool combat_done = false;
 BbWorldWarperReplay::Route cathedral_route;
 Clock::time_point settle_until;
+bool gear_enabled = false;
+bool gear_started = false;
+bool gear_equipped = false;
+bool gear_ok = false;
+unsigned gear_row = 0;
+double gear_elapsed = 0;
+unsigned gear_failures = 0;
+
+bool GearTick(Clock::time_point now) {
+    if (!gear_enabled || gear_row >= BbWorldWarperGear::rows) return false;
+    runtime_pad_director_sticks(128,128,128,128);
+    runtime_pad_director_press(0);
+    if (!gear_started) {
+        gear_started = true;
+        previous = now;
+        std::printf("[warper] combined gear pass starting before lamp tour\n");
+    }
+    if (!gear_equipped) {
+        gear_ok = BbWorldWarperGear::EquipRow(gear_row);
+        if (!gear_ok) ++gear_failures;
+        if (gear_row < 15 && gear_ok) BbWorldWarperGear::RefillBullets();
+        gear_equipped = true;
+        gear_elapsed = 0;
+        previous = now;
+    }
+    gear_elapsed += std::chrono::duration<double>(now - previous).count();
+    previous = now;
+    const bool actions = gear_ok && BbWorldWarperGear::HasWeaponActions(gear_row);
+    const double duration = actions ? 25 : 4;
+    // Allow the equipment model to load, then use the tested combat part of the routine.
+    if (actions && gear_elapsed >= 3 && gear_elapsed < 25) {
+        const auto input = BbWorldWarperMovement::At(18 + gear_elapsed - 3);
+        runtime_pad_director_press(input.buttons);
+    }
+    if (gear_elapsed >= duration) {
+        runtime_pad_director_press(0);
+        ++gear_row;
+        gear_equipped = false;
+        if (gear_row == BbWorldWarperGear::rows) {
+            combat_done = true;
+            started = false;
+            elapsed = 0;
+            previous = now;
+            std::printf("[warper] gear pass finished: %u rows failed equip verification; starting map coverage\n", gear_failures);
+            std::fflush(stdout);
+        }
+    }
+    return true;
+}
 
 void RecordStop(std::uint32_t lamp) {
     if (!state_path) return;
@@ -165,6 +215,7 @@ void Tick() {
         runtime_pad_director_sticks(128,128,128,128);
         return;
     }
+    if (GearTick(now)) return;
     if (!started) {
         started = true;
         previous = now;
@@ -221,6 +272,8 @@ extern "C" void bbgpu_world_warper_set_image(unsigned char* image, std::uint64_t
     if (!BbWorldWarperImage::Bind(image, size)) return;
     const char* mode = std::getenv("BB_WORLD_WARPER");
     if (!mode || std::strcmp(mode, "smoke") != 0) return;
+    const char* gear = std::getenv("BB_WORLD_WARPER_GEAR");
+    gear_enabled = gear && std::strcmp(gear,"1") == 0;
     // The pinned 1.09 Player No Dead patch from upstream Bloodborne.xml:
     // XML guest VA 0x0593e888 minus the 0x400000 patch base.
     const std::uint32_t no_death = 1;
