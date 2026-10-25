@@ -4,6 +4,7 @@
 #include "bbport_world_warper_memory.h"
 #include "bbport_world_warper_movement.h"
 #include "bbport_world_warper_route.h"
+#include "bbport_world_warper_replay.h"
 #include <chrono>
 #include <cstdio>
 #include <cstdlib>
@@ -33,6 +34,8 @@ bool automatic = false;
 bool entered_world = false;
 bool exit_sent = false;
 bool record_exit = false;
+BbWorldWarperReplay::Route cathedral_route;
+Clock::time_point settle_until;
 
 void RecordStop(std::uint32_t lamp) {
     if (!state_path) return;
@@ -137,6 +140,7 @@ void Tick() {
         const auto expected = tour ? BbWorldWarperRoute::stops[route_index].map : 0x18010000u;
         if ((map & 0xffff0000u) != expected) return;
         target_lamp = 0;
+        settle_until = now + std::chrono::seconds(3);
         std::printf("[warper] arrived: %s (map %08x)\n",
                     tour ? BbWorldWarperRoute::stops[route_index].name : "Central Yharnam", map);
         std::fflush(stdout);
@@ -146,15 +150,22 @@ void Tick() {
         runtime_pad_director_press(0);
         return;
     }
+    if (now < settle_until) {
+        runtime_pad_director_sticks(128,128,128,128);
+        return;
+    }
     if (!started) {
         started = true;
         previous = now;
-        std::printf("[warper] movement pass started: 18 seconds of short loops, then camera sweep\n");
+        std::printf("[warper] coverage pass: movement 18s, combat inputs 22s, camera sweep 20s\n");
         std::fflush(stdout);
     }
     elapsed += std::chrono::duration<double>(now - previous).count();
     previous = now;
-    if (elapsed >= 60) {
+    const bool replaying = tour && route_index == 1 && cathedral_route.Seconds() > 0;
+    const double stop_seconds = replaying ? cathedral_route.Seconds() + 20 : 60;
+    if (elapsed >= stop_seconds) {
+        runtime_pad_director_press(0);
         runtime_pad_director_sticks(-1,-1,-1,-1);
         if (tour) {
             RecordStop(BbWorldWarperRoute::stops[route_index].lamp);
@@ -179,8 +190,17 @@ void Tick() {
         std::fflush(stdout);
         return;
     }
+    if (replaying && elapsed < cathedral_route.Seconds()) {
+        const auto sample = cathedral_route.At(elapsed);
+        runtime_pad_director_sticks(sample.lx,sample.ly,sample.rx,sample.ry);
+        runtime_pad_director_press(sample.buttons | (sample.l2 > 127 ? 0x100 : 0) | (sample.r2 > 127 ? 0x200 : 0));
+        return;
+    }
+    runtime_pad_director_press(0);
+    if (replaying) { runtime_pad_director_sticks(128,128,255,128); return; }
     const auto input = BbWorldWarperMovement::At(elapsed);
     runtime_pad_director_sticks(input.lx, input.ly, input.rx, input.ry);
+    runtime_pad_director_press(input.buttons);
 }
 }
 
@@ -188,9 +208,23 @@ extern "C" void bbgpu_world_warper_set_image(unsigned char* image, std::uint64_t
     if (!BbWorldWarperImage::Bind(image, size)) return;
     const char* mode = std::getenv("BB_WORLD_WARPER");
     if (!mode || std::strcmp(mode, "smoke") != 0) return;
+    // The pinned 1.09 Player No Dead patch from upstream Bloodborne.xml:
+    // XML guest VA 0x0593e888 minus the 0x400000 patch base.
+    const std::uint32_t no_death = 1;
+    if (!BbWorldWarperMemory::Write(BbWorldWarperImage::Address(0x553e888), &no_death, sizeof no_death)) {
+        std::printf("[warper] cannot enable test-character death protection; not starting\n");
+        return;
+    }
+    std::printf("[warper] test-character Player No Dead enabled\n");
     boot_time = Clock::now();
     const char* auto_mode = std::getenv("BB_WORLD_WARPER_AUTO");
     automatic = auto_mode && std::strcmp(auto_mode, "1") == 0;
+    const char* replay_path = std::getenv("BB_WORLD_WARPER_CATHEDRAL_ROUTE");
+    if (replay_path) {
+        if (cathedral_route.Load(replay_path))
+            std::printf("[warper] Cathedral route loaded: %.1f seconds\n", cathedral_route.Seconds());
+        else std::printf("[warper] Cathedral route invalid; using generic movement\n");
+    }
     const char* recording = std::getenv("BB_WORLD_WARPER_RECORD");
     record_exit = recording && std::strcmp(recording, "cathedral-exit") == 0;
     const char* lamp = std::getenv("BB_WORLD_WARPER_LAMP");

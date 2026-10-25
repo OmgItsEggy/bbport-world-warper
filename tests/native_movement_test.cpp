@@ -11,7 +11,12 @@ int main() {
     assert(At(5).lx == 255);
     assert(At(6).ly == 0);
     assert(At(17).lx == 255);
-    assert(At(18).ly == 128 && At(18).rx == 255);
+    assert(At(18).buttons == 0x800);
+    assert(At(21.5).buttons == 0x200);
+    assert(At(24.1).buttons == 0x400);
+    assert(At(33.1).buttons == 0x100);
+    assert(At(35.1).buttons == 0x2000);
+    assert(At(40).rx == 255 && At(40).buttons == 0);
     assert(At(59.9).lx == 128);
     assert(At(60).lx == -1);
     assert(At(-1).lx == -1);

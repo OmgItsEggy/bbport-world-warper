@@ -4,8 +4,11 @@ import argparse
 import os
 import shutil
 import subprocess
+import sys
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from src.test_save import reset_test_save
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -37,6 +40,7 @@ def main():
     env['BB_WORLD_WARPER_ROUTE'] = 'three-area'
     env['BB_WORLD_WARPER_STATE'] = str(run / 'three-area-progress.txt')
     env['BB_WORLD_WARPER_AUTO'] = '1'
+    env.pop('BB_WORLD_WARPER_CATHEDRAL_ROUTE', None)
     if args.record_exit:
         env['BB_WORLD_WARPER_RECORD'] = 'cathedral-exit'
         env['BB_PAD_RECORD'] = str(run / 'cathedral-exit.pad')
@@ -52,7 +56,8 @@ def main():
     else:
         print('First run: choose New Game and create a disposable character. No progressed save is needed.')
     print('Three-area tour: Central Yharnam, Cathedral Ward, Old Yharnam.')
-    print('Each area: 18 seconds of movement then 42 seconds of fast camera sweep; allow loading time.')
+    print('Each area: movement, attacks/transforms/dodge/firearm, then a fast camera sweep.')
+    print('The disposable save is reset from the pristine download before every launch.')
     print('The game closes 10 seconds after the tour finishes. Log:', run / 'smoke.log')
     if args.record_exit:
         print('RECORDING MODE: automatic travel stops at Cathedral Ward. Automatic exit is disabled.')
@@ -60,6 +65,7 @@ def main():
         print('Quit normally after recording. Your recorded route stays in the project.')
     if args.prepare_only:
         return 0
+    reset_test_save(ROOT / 'build/save-seed/savedata', user / 'savedata', run / 'save-history')
     with (run / 'smoke.log').open('w', encoding='utf-8') as log:
         return subprocess.run(command, cwd=run, env=env, stdout=log, stderr=subprocess.STDOUT).returncode
 
