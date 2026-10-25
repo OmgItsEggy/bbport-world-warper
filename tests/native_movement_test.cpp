@@ -31,4 +31,11 @@ int main() {
         assert(coop::lamptravel::LampOf(stop.lamp, nullptr));
         assert(coop::lamptravel::MapOf(stop.lamp) == stop.map);
     }
+    assert(BbWorldWarperRoute::all_count == coop::lamptravel::kLampCount);
+    for (unsigned i = 0; i < BbWorldWarperRoute::all_count; ++i) {
+        const auto& stop = BbWorldWarperRoute::all_stops[i];
+        assert(coop::lamptravel::LampOf(stop.lamp, nullptr));
+        assert(coop::lamptravel::MapOf(stop.lamp) == stop.map);
+        for (unsigned j = 0; j < i; ++j) assert(stop.lamp != BbWorldWarperRoute::all_stops[j].lamp);
+    }
 }

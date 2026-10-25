@@ -18,6 +18,7 @@ def main():
     parser.add_argument('--runtime-bin', type=Path, required=True)
     parser.add_argument('--prepare-only', action='store_true')
     parser.add_argument('--record-exit', action='store_true')
+    parser.add_argument('--all-lamps', action='store_true')
     args = parser.parse_args()
     install, game, probe = args.install.resolve(), args.game.resolve(), args.probe.resolve()
     required = [probe, game / 'eboot.bin', install / 'out/boot-linked.bin',
@@ -37,8 +38,9 @@ def main():
     env.update(BB_WORLD_WARPER='smoke', BB_USER_DIR=str(user),
                BB_GPU_USER_DIR=str(install / 'user'), BB_CONFIG=str(run / 'bbport.ini'))
     env['BB_WORLD_WARPER_LAMP'] = '2412950'
-    env['BB_WORLD_WARPER_ROUTE'] = 'three-area'
-    env['BB_WORLD_WARPER_STATE'] = str(run / 'three-area-progress.txt')
+    env['BB_WORLD_WARPER_ROUTE'] = 'all-lamps' if args.all_lamps else 'three-area'
+    progress = run / ('all-lamps-progress.txt' if args.all_lamps else 'three-area-progress.txt')
+    env['BB_WORLD_WARPER_STATE'] = str(progress)
     env['BB_WORLD_WARPER_AUTO'] = '1'
     env.pop('BB_WORLD_WARPER_CATHEDRAL_ROUTE', None)
     if args.record_exit:
@@ -55,7 +57,8 @@ def main():
         print('Automatic Continue is enabled. Leave the title screen controls untouched.')
     else:
         print('First run: choose New Game and create a disposable character. No progressed save is needed.')
-    print('Three-area tour: Central Yharnam, Cathedral Ward, Old Yharnam.')
+    print('All-lamp tour selected; some destinations still need in-game validation.' if args.all_lamps
+          else 'Three-area tour: Central Yharnam, Cathedral Ward, Old Yharnam.')
     print('Combat inputs run once per tour. Later stops use movement and a fast camera sweep only.')
     print('The disposable save is reset from the pristine download before every launch.')
     print('The game closes 10 seconds after the tour finishes. Log:', run / 'smoke.log')
@@ -65,9 +68,22 @@ def main():
         print('Quit normally after recording. Your recorded route stays in the project.')
     if args.prepare_only:
         return 0
-    reset_test_save(ROOT / 'build/save-seed/savedata', user / 'savedata', run / 'save-history')
     with (run / 'smoke.log').open('w', encoding='utf-8') as log:
-        return subprocess.run(command, cwd=run, env=env, stdout=log, stderr=subprocess.STDOUT).returncode
+        for attempt in range(5):
+            reset_test_save(ROOT / 'build/save-seed/savedata', user / 'savedata', run / 'save-history')
+            before = progress.read_text() if progress.exists() else ''
+            code = subprocess.run(command, cwd=run, env=env, stdout=log, stderr=subprocess.STDOUT).returncode
+            after = progress.read_text() if progress.exists() else ''
+            lines = after.splitlines()
+            terminal = len(lines) >= (44 if args.all_lamps else 3)
+            failed_load = after != before and lines and lines[-1].startswith('skip ')
+            if args.record_exit or (code == 0 and (not failed_load or terminal)):
+                print('Coverage recorded:', sum(line.startswith('done ') for line in lines),
+                      'completed,', sum(line.startswith('skip ') for line in lines), 'skipped.')
+                return code
+            print('Restarting from recorded progress after failed load/crash:', attempt + 1)
+        print('Retry limit reached. Check smoke.log and the done/skip progress file.')
+        return 1
 
 if __name__ == '__main__':
     raise SystemExit(main())

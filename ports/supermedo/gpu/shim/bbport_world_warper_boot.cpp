@@ -26,6 +26,8 @@ bool saw_loading = false;
 std::uint32_t target_lamp = 0;
 unsigned route_index = 0;
 bool tour = false;
+const BbWorldWarperRoute::Stop* route_stops = BbWorldWarperRoute::stops;
+unsigned route_count = BbWorldWarperRoute::count;
 const char* state_path = nullptr;
 Clock::time_point boot_time;
 Clock::time_point finish_time;
@@ -44,6 +46,19 @@ void RecordStop(std::uint32_t lamp) {
         std::fprintf(file, "done %u\n", lamp);
         std::fclose(file);
     }
+}
+
+void SkipStop(Clock::time_point now, const char* reason) {
+    runtime_pad_director_sticks(-1,-1,-1,-1);
+    runtime_pad_director_press(0);
+    std::printf("[warper] skipped lamp %u: %s\n", target_lamp, reason);
+    // Keep skip separate from done: a failed destination has no coverage claim.
+    if (state_path) if (auto* file = std::fopen(state_path, "a")) {
+        std::fprintf(file, "skip %u\n", target_lamp); std::fclose(file);
+    }
+    // Restart the process after a failed load; a half-loaded world cannot safely warp again.
+    finished = true; finish_time = now;
+    std::fflush(stdout);
 }
 
 template <typename T> T Read(std::uint64_t address) {
@@ -68,10 +83,7 @@ void Tick() {
         return;
     }
     if (target_lamp && warp_requested && std::chrono::duration<double>(now - warp_time).count() > 120) {
-        finished = true;
-        runtime_pad_director_sticks(-1,-1,-1,-1);
-        std::printf("[warper] arrival timed out for lamp %u; stopped\n", target_lamp);
-        std::fflush(stdout);
+        SkipStop(now, "arrival timeout");
         return;
     }
     const auto world = Read<std::uint64_t>(BbWorldWarperImage::Address(0x553e878));
@@ -130,20 +142,18 @@ void Tick() {
     if (target_lamp && warp_requested) {
         if (!saw_loading) {
             if (std::chrono::duration<double>(now - warp_time).count() > 30) {
-                finished = true;
-                std::printf("[warper] no loading transition after warp request; stopped\n");
-                std::fflush(stdout);
+                SkipStop(now, "no loading transition");
             }
             return;
         }
         const auto history = Read<std::uint64_t>(player + 0x400);
         const auto map = history ? Read<std::uint32_t>(history + 0x48) : 0;
-        const auto expected = tour ? BbWorldWarperRoute::stops[route_index].map : 0x18010000u;
+        const auto expected = tour ? route_stops[route_index].map : 0x18010000u;
         if ((map & 0xffff0000u) != expected) return;
         target_lamp = 0;
         settle_until = now + std::chrono::seconds(3);
         std::printf("[warper] arrived: %s (map %08x)\n",
-                    tour ? BbWorldWarperRoute::stops[route_index].name : "Central Yharnam", map);
+                    tour ? route_stops[route_index].name : "Central Yharnam", map);
         std::fflush(stdout);
     }
     if (record_exit && !target_lamp) {
@@ -164,19 +174,19 @@ void Tick() {
     }
     elapsed += std::chrono::duration<double>(now - previous).count();
     previous = now;
-    const bool replaying = tour && route_index == 1 && cathedral_route.Seconds() > 0;
+    const bool replaying = tour && route_stops[route_index].lamp == 2402950 && cathedral_route.Seconds() > 0;
     const double stop_seconds = replaying ? cathedral_route.Seconds() + 20 : (combat_done ? 38 : 60);
     if (elapsed >= stop_seconds) {
         if (!replaying) combat_done = true;
         runtime_pad_director_press(0);
         runtime_pad_director_sticks(-1,-1,-1,-1);
         if (tour) {
-            RecordStop(BbWorldWarperRoute::stops[route_index].lamp);
+            RecordStop(route_stops[route_index].lamp);
             std::printf("[warper] area %u/%u complete: %s\n", route_index + 1,
-                        BbWorldWarperRoute::count, BbWorldWarperRoute::stops[route_index].name);
+                        route_count, route_stops[route_index].name);
             ++route_index;
-            if (route_index < BbWorldWarperRoute::count) {
-                target_lamp = BbWorldWarperRoute::stops[route_index].lamp;
+            if (route_index < route_count) {
+                target_lamp = route_stops[route_index].lamp;
                 started = false;
                 warp_requested = false;
                 saw_loading = false;
@@ -185,7 +195,7 @@ void Tick() {
                 std::fflush(stdout);
                 return;
             }
-            std::printf("[warper] three-area tour complete\n");
+            std::printf("[warper] lamp tour finished; see done/skip progress for coverage\n");
         }
         finished = true;
         finish_time = now;
@@ -234,26 +244,31 @@ extern "C" void bbgpu_world_warper_set_image(unsigned char* image, std::uint64_t
     // The prototype supports one verified route target only.
     if (lamp && std::strcmp(lamp, "2412950") == 0) target_lamp = 2412950;
     const char* route = std::getenv("BB_WORLD_WARPER_ROUTE");
-    tour = route && std::strcmp(route, "three-area") == 0;
+    tour = route && (std::strcmp(route, "three-area") == 0 || std::strcmp(route, "all-lamps") == 0);
+    if (route && std::strcmp(route, "all-lamps") == 0) {
+        route_stops = BbWorldWarperRoute::all_stops;
+        route_count = BbWorldWarperRoute::all_count;
+    }
     if (tour) {
         state_path = std::getenv("BB_WORLD_WARPER_STATE");
         if (state_path) {
             if (auto* file = std::fopen(state_path, "r")) {
                 unsigned lamp_done = 0;
-                while (std::fscanf(file, "done %u\n", &lamp_done) == 1) {
-                    if (route_index < BbWorldWarperRoute::count &&
-                        lamp_done == BbWorldWarperRoute::stops[route_index].lamp) ++route_index;
+                char action[8]{};
+                while (std::fscanf(file, "%7s %u\n", action, &lamp_done) == 2) {
+                    if ((std::strcmp(action,"done") == 0 || std::strcmp(action,"skip") == 0) &&
+                        route_index < route_count && lamp_done == route_stops[route_index].lamp) ++route_index;
                 }
                 std::fclose(file);
             }
         }
-        if (route_index == BbWorldWarperRoute::count) {
+        if (route_index == route_count) {
             route_index = 0;
             if (state_path) { if (auto* file = std::fopen(state_path, "w")) std::fclose(file); }
         }
-        if (record_exit) route_index = 1;
-        target_lamp = BbWorldWarperRoute::stops[route_index].lamp;
-        std::printf("[warper] three-area tour starting at stop %u\n", route_index + 1);
+        if (record_exit) route_index = route_count == BbWorldWarperRoute::count ? 1 : 4;
+        target_lamp = route_stops[route_index].lamp;
+        std::printf("[warper] lamp tour starting at stop %u of %u\n", route_index + 1, route_count);
     }
     if (!BbWorldWarperHook::InstallMainThreadTick(Tick)) {
         std::printf("[warper] smoke mode could not install the main-thread hook\n");
