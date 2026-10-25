@@ -9,6 +9,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from src.test_save import reset_test_save
+from src.encounter_report import write_report
 
 def recover_gear_checkpoint(log_path, checkpoint):
     """Migrate completed gear coverage from an older build's retained log."""
@@ -59,6 +60,7 @@ def main():
     env['BB_WORLD_WARPER_GEAR_STATE'] = str(gear_progress)
     env['BB_WORLD_WARPER_AUTO'] = '1'
     env['BB_WORLD_WARPER_GEAR'] = '0' if args.record_exit or args.encounters else '1'
+    env['BB_WORLD_WARPER_BOSS_HEALTH_STAGES'] = '1' if args.encounters else '0'
     env.pop('BB_WORLD_WARPER_CATHEDRAL_ROUTE', None)
     if args.record_exit:
         env['BB_WORLD_WARPER_RECORD'] = 'cathedral-exit'
@@ -80,6 +82,9 @@ def main():
     print('Focused encounter observation: two Upper Cathedral destinations and Cainhurst rooftop; no gear repetition.'
           if args.encounters else 'Combined pass: weapon/armour rotation first, then the lamp tour.')
     print('The disposable save is reset from the pristine download before every launch.')
+    if args.encounters:
+        print('Boss batch: ranged/close windows, then requests 60% and 30% of initial HP on test bosses only.')
+        print('HP requests and animation changes are recorded; actual phase transitions still require observation.')
     print('The game closes 10 seconds after the tour finishes. Log:', run / 'smoke.log')
     if args.record_exit:
         print('RECORDING MODE: automatic travel stops at Cathedral Ward. Automatic exit is disabled.')
@@ -97,6 +102,10 @@ def main():
             reset_test_save(ROOT / 'build/save-seed/savedata', user / 'savedata', run / 'save-history')
             before = progress.read_text() if progress.exists() else ''
             code = subprocess.run(command, cwd=run, env=env, stdout=log, stderr=subprocess.STDOUT).returncode
+            log.flush()
+            report_path=run / f'{route}-report.json'
+            write_report(run / 'smoke.log', report_path)
+            print('Session evidence report:', report_path)
             after = progress.read_text() if progress.exists() else ''
             lines = after.splitlines()
             terminal = len(lines) >= (44 if args.all_lamps else 3)

@@ -8,6 +8,7 @@
 #include "bbport_world_warper_gear.h"
 #include "bbport_world_warper_observe.h"
 #include "bbport_world_warper_compile.h"
+#include "bbport_world_warper_encounter.h"
 #include <chrono>
 #include <cstdio>
 #include <cstdlib>
@@ -55,9 +56,8 @@ BbWorldWarperCompile::Snapshot compile_start{};
 std::uint64_t compile_serial = 0;
 Clock::time_point compile_quiet_since;
 bool encounter_watch = false;
-bool ebrietas_approached = false;
-bool logarius_approached = false;
-unsigned logarius_refresh = 0;
+BbWorldWarperEncounter::Run boss_run;
+bool boss_health_stages = false;
 
 bool GearTick(Clock::time_point now) {
     if (!gear_enabled || gear_row >= BbWorldWarperGear::rows) return false;
@@ -248,21 +248,11 @@ void Tick() {
         started = true;
         previous = now;
         encounter_watch = BbWorldWarperObserve::Census(world, player, tour ? route_stops[route_index].lamp : 2412950, "start");
-        ebrietas_approached = false;
-        logarius_approached = false;
-        logarius_refresh = 0;
-        if (tour && (route_stops[route_index].lamp == 2422951 || route_stops[route_index].lamp == 2422952)) {
-            ebrietas_approached = BbWorldWarperObserve::ApproachEbrietas(player);
-            std::printf("[warper] Ebrietas targeted approach %s\n",ebrietas_approached ? "requested" : "unavailable; coverage remains unverified");
-        }
-        if (tour && route_stops[route_index].lamp == 2502952) {
-            logarius_approached = BbWorldWarperObserve::ApproachLogarius(player);
-            std::printf("[warper] Logarius targeted approach %s\n",logarius_approached ? "requested" : "unavailable; coverage remains unverified");
-        }
+        boss_run.Begin(tour ? route_stops[route_index].lamp : 0,player,boss_health_stages);
         compile_start = BbWorldWarperCompile::Read();
         compile_serial = compile_start.serial;
         compile_quiet_since = now;
-        if (encounter_watch) std::printf("[warper] new living entities within 30m: adding 20s protected observation; attacks/phases unverified\n");
+        if (encounter_watch && !boss_run.Active()) std::printf("[warper] new living entities within 30m: adding 20s protected observation; attacks/phases unverified\n");
         std::printf("[warper] coverage pass: movement 18s, combat %s, camera sweep 20s\n",
                     combat_done ? "already covered; skipped" : "22s");
         std::fflush(stdout);
@@ -270,15 +260,16 @@ void Tick() {
     elapsed += std::chrono::duration<double>(now - previous).count();
     previous = now;
     const bool replaying = tour && route_stops[route_index].lamp == 2402950 && cathedral_route.Seconds() > 0;
-    const double stop_seconds = (ebrietas_approached || logarius_approached) ? 60 : (replaying ? cathedral_route.Seconds() + 20 : (combat_done ? 38 : 60));
+    const double stop_seconds = boss_run.Active() ? boss_run.Seconds() : (replaying ? cathedral_route.Seconds() + 20 : (combat_done ? 38 : 60));
     const auto counters = BbWorldWarperCompile::Read();
     if (counters.active || counters.serial != compile_serial) {
         compile_serial = counters.serial;
         compile_quiet_since = now;
     }
-    const double coverage_seconds = stop_seconds + (encounter_watch ? 20 : 0);
+    const double coverage_seconds = stop_seconds + (encounter_watch && !boss_run.Active() ? 20 : 0);
     const bool quiet = !counters.active && std::chrono::duration<double>(now-compile_quiet_since).count() >= 3;
     if (elapsed >= coverage_seconds && (quiet || elapsed >= coverage_seconds + 15)) {
+        boss_run.Finish();
         std::printf("[warper] compilation evidence: +%llu successful new pipelines, +%llu shader/pipeline compile scopes; quiet=%s; exhaustive coverage NOT claimed\n",
                     static_cast<unsigned long long>(counters.pipelines-compile_start.pipelines),
                     static_cast<unsigned long long>(counters.events-compile_start.events), quiet ? "yes" : "no (settling limit)");
@@ -309,16 +300,10 @@ void Tick() {
         std::fflush(stdout);
         return;
     }
-    if (ebrietas_approached || logarius_approached) {
-        if (logarius_approached && logarius_refresh<3 && elapsed>=20*(logarius_refresh+1)) {
-            ++logarius_refresh;
-            BbWorldWarperObserve::ApproachLogarius(player,true);
-        }
-        // Let placement/activation settle; then observe without retreating to the lamp.
-        // Brief R1 attempts may provoke her; neither input nor proximity proves activation.
-        const bool hit=(elapsed>=8 && elapsed<8.2) || (elapsed>=10 && elapsed<10.2);
-        runtime_pad_director_press(hit ? 0x800 : 0);
-        runtime_pad_director_sticks(128,128,elapsed<3 ? 128 : 180,128);
+    if (boss_run.Active()) {
+        const auto input=boss_run.Tick(elapsed);
+        runtime_pad_director_press(input.buttons);
+        runtime_pad_director_sticks(input.lx,input.ly,input.rx,input.ry);
         return;
     }
     if (elapsed >= stop_seconds) {
@@ -347,6 +332,8 @@ extern "C" void bbgpu_world_warper_set_image(unsigned char* image, std::uint64_t
     const char* gear = std::getenv("BB_WORLD_WARPER_GEAR");
     gear_enabled = gear && std::strcmp(gear,"1") == 0;
     gear_state_path = std::getenv("BB_WORLD_WARPER_GEAR_STATE");
+    const char* health_stages=std::getenv("BB_WORLD_WARPER_BOSS_HEALTH_STAGES");
+    boss_health_stages=health_stages && std::strcmp(health_stages,"1")==0;
     // The pinned 1.09 Player No Dead patch from upstream Bloodborne.xml:
     // XML guest VA 0x0593e888 minus the 0x400000 patch base.
     const std::uint32_t no_death = 1;
