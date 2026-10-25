@@ -29,6 +29,7 @@ def main():
     parser.add_argument('--prepare-only', action='store_true')
     parser.add_argument('--record-exit', action='store_true')
     parser.add_argument('--all-lamps', action='store_true')
+    parser.add_argument('--encounters', action='store_true')
     args = parser.parse_args()
     install, game, probe = args.install.resolve(), args.game.resolve(), args.probe.resolve()
     required = [probe, game / 'eboot.bin', install / 'out/boot-linked.bin',
@@ -48,13 +49,16 @@ def main():
     env.update(BB_WORLD_WARPER='smoke', BB_USER_DIR=str(user),
                BB_GPU_USER_DIR=str(install / 'user'), BB_CONFIG=str(run / 'bbport.ini'))
     env['BB_WORLD_WARPER_LAMP'] = '2412950'
-    env['BB_WORLD_WARPER_ROUTE'] = 'all-lamps' if args.all_lamps else 'three-area'
-    progress = run / ('all-lamps-progress.txt' if args.all_lamps else 'three-area-progress.txt')
+    if args.encounters and (args.all_lamps or args.record_exit):
+        parser.error('--encounters cannot be combined with all-lamps or recording')
+    route = 'encounters' if args.encounters else ('all-lamps' if args.all_lamps else 'three-area')
+    env['BB_WORLD_WARPER_ROUTE'] = route
+    progress = run / f'{route}-progress.txt'
     env['BB_WORLD_WARPER_STATE'] = str(progress)
     gear_progress = progress.with_suffix('.gear.txt')
     env['BB_WORLD_WARPER_GEAR_STATE'] = str(gear_progress)
     env['BB_WORLD_WARPER_AUTO'] = '1'
-    env['BB_WORLD_WARPER_GEAR'] = '0' if args.record_exit else '1'
+    env['BB_WORLD_WARPER_GEAR'] = '0' if args.record_exit or args.encounters else '1'
     env.pop('BB_WORLD_WARPER_CATHEDRAL_ROUTE', None)
     if args.record_exit:
         env['BB_WORLD_WARPER_RECORD'] = 'cathedral-exit'
@@ -70,9 +74,11 @@ def main():
         print('Automatic Continue is enabled. Leave the title screen controls untouched.')
     else:
         print('First run: choose New Game and create a disposable character. No progressed save is needed.')
-    print('All-lamp tour selected; some destinations still need in-game validation.' if args.all_lamps
-          else 'Three-area tour: Central Yharnam, Cathedral Ward, Old Yharnam.')
-    print('Combined pass: weapon/armour rotation first, then the lamp tour.')
+    if not args.encounters:
+        print('All-lamp tour selected; some destinations still need in-game validation.' if args.all_lamps
+              else 'Three-area tour: Central Yharnam, Cathedral Ward, Old Yharnam.')
+    print('Focused encounter observation: two Upper Cathedral destinations and Cainhurst rooftop; no gear repetition.'
+          if args.encounters else 'Combined pass: weapon/armour rotation first, then the lamp tour.')
     print('The disposable save is reset from the pristine download before every launch.')
     print('The game closes 10 seconds after the tour finishes. Log:', run / 'smoke.log')
     if args.record_exit:

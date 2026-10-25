@@ -9,6 +9,12 @@ inline constexpr Stop stops[] = {
     {2302950, 0x17000000, "Old Yharnam"},
 };
 inline constexpr unsigned count = sizeof(stops) / sizeof(stops[0]);
+// Focused validation: two Upper Cathedral boss destinations plus Cainhurst rooftop.
+inline constexpr Stop encounter_stops[] = {
+    {2422952,0x18020000,"Upper Cathedral Ward"},
+    {2422951,0x18020000,"Upper Cathedral Ward"},
+    {2502952,0x19000000,"Cainhurst rooftop"},
+};
 constexpr Stop Lamp(unsigned a, unsigned n, const char* name) {
     return {a * 10000u + 2950u + n, ((a / 10) << 24) | ((a % 10) << 16), name};
 }

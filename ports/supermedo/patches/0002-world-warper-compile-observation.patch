@@ -1,0 +1,35 @@
+diff --git a/gpu/shadps4/video_core/renderer_vulkan/vk_pipeline_cache.cpp b/gpu/shadps4/video_core/renderer_vulkan/vk_pipeline_cache.cpp
+--- a/gpu/shadps4/video_core/renderer_vulkan/vk_pipeline_cache.cpp
++++ b/gpu/shadps4/video_core/renderer_vulkan/vk_pipeline_cache.cpp
+@@ -2,6 +2,7 @@
+ // SPDX-License-Identifier: GPL-2.0-or-later
+ 
+ #include <atomic>
++#include "bbport_world_warper_compile.h"
+ #include <chrono>
+ #include <cstdlib>
+ #include <cstring>
+@@ -360,6 +361,7 @@
+ std::atomic<u32> g_bb_compiles;
+ namespace {
+ struct CompileTimer {
++    BbWorldWarperCompile::Scope warper_scope;
+     std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
+     ~CompileTimer() {
+         g_bb_compile_ns += u64(std::chrono::duration_cast<std::chrono::nanoseconds>(
+@@ -444,6 +446,7 @@
+ 
+         RegisterPipelineData(sel.graphics_key, pipeline_hash, sdata);
+         ++num_new_pipelines;
++        ++BbWorldWarperCompile::pipelines;
+ 
+         if (EmulatorSettings.IsShaderCollect()) {
+             for (auto stage = 0; stage < MaxShaderStages; ++stage) {
+@@ -479,6 +482,7 @@
+         }
+         RegisterPipelineData(compute_key, sdata);
+         ++num_new_pipelines;
++        ++BbWorldWarperCompile::pipelines;
+ 
+         if (EmulatorSettings.IsShaderCollect()) {
+             auto& m = sel.modules[0];

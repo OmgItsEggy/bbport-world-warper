@@ -19,7 +19,7 @@
 ## In progress
 
 - Recover ReturnPointParam lookup and loaded-enemy enumeration without Visy's party layer.
-- Connect Supermedo's pipeline counters to `CompileCounters`.
+- Validate new cumulative shader/pipeline compile telemetry in-game (independent of upstream's periodically reset frame-stat counters).
 - Encounter-aware coverage: distinguish cutscenes, missing bosses and active combat from timed scenery passes.
 
 ## Live validation — 25 October 2026
@@ -29,7 +29,10 @@
 - Gear completion now persists across restarts; the disposable save still resets each launch. Prior session logs are archived.
 - User observed Celestial Emissary, Ebrietas, Blood-starved Beast, Darkbeast Paarl and other bosses alive. Father Gascoigne and Ludwig were not seen.
 - User observed entrance cutscenes for Martyr Logarius, Mergo's Wet Nurse, Laurence and Orphan of Kos; inputs appeared to wait until they ended. The new build explicitly pauses gear/scenery clocks and neutralizes input while the game's cinematic flag is set, logging both transitions. This behavior has synthetic tests but awaits in-game validation.
-- New build records a bounded, read-only enemy census at each scenery pass's start/end: entity IDs, handles and HP, with living/dead totals. Loaded presence is explicitly not a claim of visibility, boss identity, attack playback or shader coverage. Pipeline compilation counters and controlled encounter actions are not wired yet.
+- New build records a bounded, read-only enemy census at each scenery pass's start/end: entity IDs, handles and HP, with living/dead totals. Loaded presence is explicitly not a claim of visibility, boss identity, attack playback or shader coverage.
+- New entities within 30m trigger 20 seconds of protected camera observation, once per entity ID per process. This allows natural AI activity but does not force aggression, boss activation, phases or specific attacks.
+- Compilation telemetry records completed shader/pipeline compile scopes, active scopes and successful new graphics/compute pipelines. Counts are process-local and may include driver-cache hits; scope timings overlap. Stops wait for three seconds without observed compile activity, capped at 15 additional active seconds. Quiet does not imply complete rendering or queued GPU work has drained.
+- Focused `--encounters` route uses two Upper Cathedral destinations and the Cainhurst rooftop, separate progress, and no equipment pass. Use local `Test-Encounters.cmd` for the next in-game validation instead of repeating all 44 lamps.
 - User observed abnormal floor rendering in Rom's arena; cause not established.
 - First Cainhurst rooftop attempt crashed with Vulkan device lost during submit, preceded by texture-memory pressure warnings. A later resumed run completed the destination; underlying crash cause remains unresolved.
 - A `done` record means the timed routine finished, not that all shaders, boss phases, visible scenery or effects were exercised.
