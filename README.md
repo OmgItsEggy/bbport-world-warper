@@ -20,7 +20,7 @@ The finished run is deliberately hybrid rather than a single synthetic map:
 3. Rotate 34 armour appearances, 26 right-hand weapon models and 15 left-hand weapon models.
 4. Trigger usable item effects and Hunter tools in a controlled pass.
 5. Find nearby enemy kinds, exercise their rendering, attacks and death effects, and optionally include boss arenas.
-6. Cover cutscenes, time-of-day variants and optional Chalice Dungeon rows.
+6. Cover cutscenes and time-of-day variants. Chalice Dungeons are out of scope.
 7. Replay representative areas before and after the tour to measure remaining compilation stutter.
 
 A custom shader gallery may be added later for repeatable effect coverage, but it cannot replace real-map traversal: a gallery alone misses map-specific materials, lighting combinations, visibility state and encounter pipelines.

@@ -32,6 +32,10 @@ int main() {
         assert(coop::lamptravel::MapOf(stop.lamp) == stop.map);
     }
     assert(BbWorldWarperRoute::all_count == coop::lamptravel::kLampCount);
+    assert(BbWorldWarperRoute::boss_stops.size()==46);
+    assert(BbWorldWarperRoute::boss_stops[44].lamp==coop::lamptravel::kDreamReturnPoint);
+    assert(BbWorldWarperRoute::boss_stops[44].map==coop::lamptravel::MapOf(coop::lamptravel::kDreamReturnPoint));
+    for(const auto& stop:BbWorldWarperRoute::boss_stops) assert((stop.map>>24)!=29);
     for (unsigned i = 0; i < BbWorldWarperRoute::all_count; ++i) {
         const auto& stop = BbWorldWarperRoute::all_stops[i];
         assert(coop::lamptravel::LampOf(stop.lamp, nullptr));

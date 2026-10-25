@@ -45,23 +45,31 @@ int main() {
     Put<unsigned>(boss+0x1f0,2500800);
     Put<std::uint64_t>(boss+0x3b0,0x8000);
     Put<std::uint64_t>(0x8020,damage);
-    Put<int>(damage+0xf8,1000);
+    Put<int>(damage+0xf8,800); // partly damaged: percentages must use max, not starting HP
+    Put<int>(damage+0xfc,1000);
     Position(boss,0x10000,0); Position(player,0x20000,30);
     Put<std::uint64_t>(player,0x5000);
     Put<std::uint64_t>(0x55f8,reinterpret_cast<std::uint64_t>(&FakeWarp));
-    BbWorldWarperObserve::logarius=boss;
+    BbWorldWarperObserve::actors={{boss,2500800}};
+    BbWorldWarperEncounter::attempted.clear();
     BbWorldWarperEncounter::Run run;
     run.Begin(2502952,player,true);
-    assert(run.Active() && run.Seconds()==115);
-    run.Tick(0); assert(writes==0 && placements==1 && placed_x==14); // ranged first
-    run.Tick(20); assert(writes==0 && placements==2 && placed_x==3); // then close
-    run.Tick(45); assert(BbWorldWarperObserve::Read<int>(damage+0xf8)==600);
-    run.Tick(65); assert(writes==1); // never repeatedly writes the same threshold
-    run.Tick(90); assert(BbWorldWarperObserve::Read<int>(damage+0xf8)==300 && writes==2);
-    run.Tick(115); run.Finish();
+    assert(run.Active() && run.Seconds()==105);
+    run.Tick(0); assert(writes==0 && placements==1 && placed_x==14);
+    run.Tick(20); assert(writes==0 && placements==2 && placed_x==3);
+    auto input=run.Tick(40);
+    assert(BbWorldWarperObserve::Read<int>(damage+0xf8)==650 && writes==1);
+    const auto transition_placements=placements;
+    input=run.Tick(50);
+    assert(input.buttons==0 && input.rx==128 && placements==transition_placements);
+    run.Tick(55); assert(writes==1 && placed_x==14);
+    run.Tick(80); assert(writes==1 && placed_x==3);
+    run.Tick(105); run.Finish();
+    run.Begin(2502952,player,true); assert(!run.Active()); // no duplicate completed attempts
+    BbWorldWarperEncounter::attempted.clear();
     Put<int>(damage+0xf8,1000);
-    run.Begin(2502952,player,false); run.Tick(90);
-    assert(BbWorldWarperObserve::Read<int>(damage+0xf8)==1000 && writes==2);
-    Put<unsigned>(boss+0x1f0,123); // stale/reused entity cannot be modified
-    run.Tick(45); assert(writes==2);
+    run.Begin(2502952,player,false); run.Tick(40);
+    assert(BbWorldWarperObserve::Read<int>(damage+0xf8)==1000 && writes==1);
+    Put<unsigned>(boss+0x1f0,123);
+    run.Tick(55); assert(writes==1); // stale reference cannot write HP
 }

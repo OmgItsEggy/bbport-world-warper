@@ -31,6 +31,7 @@ def main():
     parser.add_argument('--record-exit', action='store_true')
     parser.add_argument('--all-lamps', action='store_true')
     parser.add_argument('--encounters', action='store_true')
+    parser.add_argument('--bosses', action='store_true')
     args = parser.parse_args()
     install, game, probe = args.install.resolve(), args.game.resolve(), args.probe.resolve()
     required = [probe, game / 'eboot.bin', install / 'out/boot-linked.bin',
@@ -50,17 +51,20 @@ def main():
     env.update(BB_WORLD_WARPER='smoke', BB_USER_DIR=str(user),
                BB_GPU_USER_DIR=str(install / 'user'), BB_CONFIG=str(run / 'bbport.ini'))
     env['BB_WORLD_WARPER_LAMP'] = '2412950'
-    if args.encounters and (args.all_lamps or args.record_exit):
-        parser.error('--encounters cannot be combined with all-lamps or recording')
-    route = 'encounters' if args.encounters else ('all-lamps' if args.all_lamps else 'three-area')
+    if sum((args.encounters,args.bosses,args.all_lamps,args.record_exit))>1:
+        parser.error('Select only one tour/recording mode')
+    route = 'bosses' if args.bosses else ('encounters' if args.encounters else ('all-lamps' if args.all_lamps else 'three-area'))
+    boss_batch=args.encounters or args.bosses
     env['BB_WORLD_WARPER_ROUTE'] = route
     progress = run / f'{route}-progress.txt'
     env['BB_WORLD_WARPER_STATE'] = str(progress)
     gear_progress = progress.with_suffix('.gear.txt')
     env['BB_WORLD_WARPER_GEAR_STATE'] = str(gear_progress)
     env['BB_WORLD_WARPER_AUTO'] = '1'
-    env['BB_WORLD_WARPER_GEAR'] = '0' if args.record_exit or args.encounters else '1'
-    env['BB_WORLD_WARPER_BOSS_HEALTH_STAGES'] = '1' if args.encounters else '0'
+    env['BB_WORLD_WARPER_GEAR'] = '0' if args.record_exit or boss_batch else '1'
+    env['BB_WORLD_WARPER_BOSS_HEALTH_STAGES'] = '1' if boss_batch else '0'
+    env['BB_WORLD_WARPER_BOSS_RUNS'] = '1' if boss_batch else '0'
+    env['BB_WORLD_WARPER_BOSS_STATE'] = str(progress.with_suffix('.boss-attempts.txt'))
     env.pop('BB_WORLD_WARPER_CATHEDRAL_ROUTE', None)
     if args.record_exit:
         env['BB_WORLD_WARPER_RECORD'] = 'cathedral-exit'
@@ -76,14 +80,19 @@ def main():
         print('Automatic Continue is enabled. Leave the title screen controls untouched.')
     else:
         print('First run: choose New Game and create a disposable character. No progressed save is needed.')
-    if not args.encounters:
+    if args.bosses:
+        print('Full non-Chalice boss batch: 22-boss roster, 44 lamp stops plus two Dream visits. No gear repeat.')
+        print('Only eligible loaded actors are exercised; missing bosses and special group/script mechanics are not claimed covered.')
+    elif not args.encounters:
         print('All-lamp tour selected; some destinations still need in-game validation.' if args.all_lamps
               else 'Three-area tour: Central Yharnam, Cathedral Ward, Old Yharnam.')
-    print('Focused encounter observation: two Upper Cathedral destinations and Cainhurst rooftop; no gear repetition.'
-          if args.encounters else 'Combined pass: weapon/armour rotation first, then the lamp tour.')
+    if not args.bosses:
+        print('Focused encounter observation: two Upper Cathedral destinations and Cainhurst rooftop; no gear repetition.'
+              if args.encounters else 'Combined pass: weapon/armour rotation first, then the lamp tour.')
     print('The disposable save is reset from the pristine download before every launch.')
-    if args.encounters:
-        print('Boss batch: ranged/close windows, then requests 60% and 30% of initial HP on test bosses only.')
+    if boss_batch:
+        print('Boss batch: ranged/close windows and boss-specific below-threshold HP requests, based on instance maximum HP.')
+        print('Transition holds do not attack or correct gaps. Group/shared-bar/scripted fights are observation-only.')
         print('HP requests and animation changes are recorded; actual phase transitions still require observation.')
     print('The game closes 10 seconds after the tour finishes. Log:', run / 'smoke.log')
     if args.record_exit:
@@ -108,7 +117,7 @@ def main():
             print('Session evidence report:', report_path)
             after = progress.read_text() if progress.exists() else ''
             lines = after.splitlines()
-            terminal = len(lines) >= (44 if args.all_lamps else 3)
+            terminal = len(lines) >= (46 if args.bosses else 44 if args.all_lamps else 3)
             failed_load = after != before and lines and lines[-1].startswith('skip ')
             if args.record_exit or (code == 0 and (not failed_load or terminal)):
                 print('Coverage recorded:', sum(line.startswith('done ') for line in lines),

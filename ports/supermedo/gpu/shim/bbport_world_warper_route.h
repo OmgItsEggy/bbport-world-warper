@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once
 #include <cstdint>
+#include <array>
 namespace BbWorldWarperRoute {
 struct Stop { std::uint32_t lamp, map; const char* name; };
 inline constexpr Stop stops[] = {
@@ -34,4 +35,14 @@ inline constexpr Stop all_stops[] = {
     Lamp(360,0,"Fishing Hamlet"), Lamp(360,1,"Fishing Hamlet"), Lamp(360,2,"Fishing Hamlet"),
 };
 inline constexpr unsigned all_count = sizeof(all_stops) / sizeof(all_stops[0]);
+constexpr auto MakeBossStops() {
+    std::array<Stop,all_count+2> result{};
+    for(unsigned i=0;i<all_count;++i) result[i]=all_stops[i];
+    // Common event 7200's documented Dream return point. Two visits allow two
+    // eligible ending bosses to be considered independently; no ending flags forced.
+    result[all_count]={2102950,0x15000000,"Hunter's Dream / ending encounters"};
+    result[all_count+1]=result[all_count];
+    return result;
+}
+inline constexpr auto boss_stops=MakeBossStops();
 }

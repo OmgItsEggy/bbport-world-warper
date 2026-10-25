@@ -5,12 +5,15 @@
 #include <cstdio>
 #include <cmath>
 #include <set>
+#include <vector>
 
 // Read-only, bounded census adapted from the pinned reference party_balance.cpp.
 // Loaded entities are NOT evidence that their materials or attack effects were drawn.
 namespace BbWorldWarperObserve {
 inline std::uint64_t ebrietas = 0;
 inline std::uint64_t logarius = 0;
+struct Actor { std::uint64_t chr; unsigned entity; };
+inline std::vector<Actor> actors;
 // Bloodborne character forward is (-sin(yaw), -cos(yaw)).
 inline float FaceTarget(float from_x, float from_z, float target_x, float target_z) {
     return std::atan2(from_x-target_x, from_z-target_z);
@@ -71,7 +74,7 @@ inline bool Census(std::uint64_t world, std::uint64_t player, unsigned lamp, con
     }
     std::set<u64> seen;
     unsigned living = 0, dead = 0;
-    if (phase[0]=='s') { ebrietas=0; logarius=0; }
+    if (phase[0]=='s') { ebrietas=0; logarius=0; actors.clear(); }
     static std::set<unsigned> observed;
     bool watch=false;
     float origin[3]{};
@@ -95,6 +98,7 @@ inline bool Census(std::uint64_t world, std::uint64_t player, unsigned lamp, con
             if (hp < 0) continue;
             if (hp > 0) ++living; else ++dead;
             const auto entity=Read<unsigned>(chr+0x1f0);
+            if (phase[0]=='s' && hp>0 && entity && entity!=~0u) actors.push_back({chr,entity});
             if (entity==2420800 && hp>0) ebrietas=chr;
             if (entity==2500800 && hp>0) logarius=chr;
             float pos[3]{};

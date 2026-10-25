@@ -58,6 +58,7 @@ Clock::time_point compile_quiet_since;
 bool encounter_watch = false;
 BbWorldWarperEncounter::Run boss_run;
 bool boss_health_stages = false;
+bool boss_runs_enabled = false;
 
 bool GearTick(Clock::time_point now) {
     if (!gear_enabled || gear_row >= BbWorldWarperGear::rows) return false;
@@ -248,7 +249,7 @@ void Tick() {
         started = true;
         previous = now;
         encounter_watch = BbWorldWarperObserve::Census(world, player, tour ? route_stops[route_index].lamp : 2412950, "start");
-        boss_run.Begin(tour ? route_stops[route_index].lamp : 0,player,boss_health_stages);
+        if(boss_runs_enabled) boss_run.Begin(tour ? route_stops[route_index].lamp : 0,player,boss_health_stages,world);
         compile_start = BbWorldWarperCompile::Read();
         compile_serial = compile_start.serial;
         compile_quiet_since = now;
@@ -334,6 +335,8 @@ extern "C" void bbgpu_world_warper_set_image(unsigned char* image, std::uint64_t
     gear_state_path = std::getenv("BB_WORLD_WARPER_GEAR_STATE");
     const char* health_stages=std::getenv("BB_WORLD_WARPER_BOSS_HEALTH_STAGES");
     boss_health_stages=health_stages && std::strcmp(health_stages,"1")==0;
+    const char* boss_runs=std::getenv("BB_WORLD_WARPER_BOSS_RUNS");
+    boss_runs_enabled=boss_runs && std::strcmp(boss_runs,"1")==0;
     // The pinned 1.09 Player No Dead patch from upstream Bloodborne.xml:
     // XML guest VA 0x0593e888 minus the 0x400000 patch base.
     const std::uint32_t no_death = 1;
@@ -358,7 +361,13 @@ extern "C" void bbgpu_world_warper_set_image(unsigned char* image, std::uint64_t
     if (lamp && std::strcmp(lamp, "2412950") == 0) target_lamp = 2412950;
     const char* route = std::getenv("BB_WORLD_WARPER_ROUTE");
     const bool encounters = route && std::strcmp(route,"encounters") == 0;
-    tour = route && (std::strcmp(route, "three-area") == 0 || std::strcmp(route, "all-lamps") == 0 || encounters);
+    const bool bosses = route && std::strcmp(route,"bosses") == 0;
+    tour = route && (std::strcmp(route, "three-area") == 0 || std::strcmp(route, "all-lamps") == 0 || encounters || bosses);
+    if(bosses) {
+        route_stops=BbWorldWarperRoute::boss_stops.data();
+        route_count=static_cast<unsigned>(BbWorldWarperRoute::boss_stops.size());
+        gear_enabled=false; combat_done=true;
+    }
     if (encounters) {
         route_stops = BbWorldWarperRoute::encounter_stops;
         route_count = 3;
@@ -386,6 +395,8 @@ extern "C" void bbgpu_world_warper_set_image(unsigned char* image, std::uint64_t
             route_index = 0;
             if (state_path) { if (auto* file = std::fopen(state_path, "w")) std::fclose(file); }
             if (gear_state_path) { if (auto* file = std::fopen(gear_state_path, "w")) std::fclose(file); }
+            const char* boss_state=std::getenv("BB_WORLD_WARPER_BOSS_STATE");
+            if(boss_state) { if(auto* file=std::fopen(boss_state,"w")) std::fclose(file); }
         }
         if (gear_enabled && gear_state_path) if (auto* file = std::fopen(gear_state_path, "r")) {
             unsigned attempted = 0, failures = 0;
@@ -402,6 +413,7 @@ extern "C" void bbgpu_world_warper_set_image(unsigned char* image, std::uint64_t
         target_lamp = route_stops[route_index].lamp;
         std::printf("[warper] lamp tour starting at stop %u of %u\n", route_index + 1, route_count);
     }
+    if(boss_runs_enabled) BbWorldWarperEncounter::LoadState(std::getenv("BB_WORLD_WARPER_BOSS_STATE"));
     if (!BbWorldWarperHook::InstallMainThreadTick(Tick)) {
         std::printf("[warper] smoke mode could not install the main-thread hook\n");
     }

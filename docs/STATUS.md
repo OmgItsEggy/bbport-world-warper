@@ -37,7 +37,7 @@
 - Follow-up user test confirmed attacks hit Ebrietas and woke her after correcting the facing yaw. The retained log recorded +7 successful new pipelines and +13 completed compile scopes at that stop; these numbers are not an exhaustive coverage claim.
 - User reported Logarius stayed distant and used ranged attacks. New build adds entity-2500800 proximity placement to 3m at the rooftop stop, plus at most three checks at 20s intervals to close gaps over 10m only when vertical separation is at most 1.5m. This is awaiting in-game validation. No HP/phase forcing is implemented.
 
-## Batched encounter build (supersedes the single-distance routines above)
+## Earlier batched encounter build (historical; superseded below)
 
 - User requested fewer checkpoints and ranged attacks before close combat. Logarius now has five stages: ranged 14m/20s, close 3m/25s, 60%-HP ranged 14m/20s, 60%-HP close 3m/25s, 30%-HP close 3m/25s. Ebrietas: wake 4m/15s, ranged 12m/20s, close 4m/25s, 60%-HP ranged 12m/20s, 30%-HP close 4m/25s.
 - Health requests are enabled only by the focused encounter launcher, target the selected live boss's damage module, only reduce HP, and clamp above zero. Starting HP is the baseline, not a separately verified maximum. These are requests for lower-health behaviour, NOT verified phase transitions or damage-event simulation.
@@ -53,5 +53,15 @@
 
 - Refactor the upstream state machine onto `Backend`.
 - Comprehensive item effects, enemy attack/death and boss-phase passes; launcher page.
-- Dedicated Hunter tools, controlled cutscene, time-of-day and Chalice passes.
+- Dedicated Hunter tools, controlled cutscene and time-of-day passes. Chalices are out of scope.
+
+## Current full non-Chalice roster batch
+
+- User explicitly requested all main-game/DLC bosses and excluded Chalices. `Run-Boss-Batch.cmd` / `--bosses` visits the 44 known lamps plus two documented Hunter's Dream returns. No equipment repeat; separate route and boss-attempt checkpoints.
+- Catalog includes all 22 names and known entity variants. At each stop the nearest unattempted living catalog actor within 100m and 8m vertical separation is selected. This is an availability-driven attempt, not guaranteed boss spawning; absent or disabled bosses are reported, never silently certified.
+- Profiles derive below-threshold sample HP from the boss reference: 5 percentage points below each documented threshold. Instance maximum HP is read at damage-module +0xfc (pinned party_balance.cpp:16); invalid values reject the run. HP is only reduced and never set to zero.
+- Every applicable phase has ranged and close windows. Transition holds are 15s with no attacks, camera sweep or gap corrections. Logarius uses 100% ranged/close, 65% transition, then ranged/close; no invented third phase. Ebrietas adds activation, then 45% transition and both phase-2 distance windows.
+- Witches, Shadows, Micolash and Living Failures receive group/scripted observation-only profiles: no unsafe use of one actor's HP as a shared/group progression substitute. Their complete encounter scripts, group transitions and death/revival states remain unimplemented.
+- Native tests cover all 22 catalog entries, no Chalice family/route, sourced samples, maximum-vs-starting HP, no repeated successful attempts, transition silence, stale target protection, positive placement/facing, roster reporting and full route/Dream IDs.
+- Reports distinguish not-attempted, previous-session attempt, incomplete, stages-attempted and scripted-observation-only. They do not certify actual named phases or exhaustive shader coverage. New full-roster behaviour awaits one combined user run; no claim that all 22 bosses are functional.
 

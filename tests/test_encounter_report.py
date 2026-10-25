@@ -15,3 +15,10 @@ class EncounterReportTests(unittest.TestCase):
     def test_empty_or_interrupted_session_is_not_complete(self):
         self.assertFalse(summarize('GPU: device lost')['tour_finished'])
         self.assertEqual(summarize('')['stage_results'],[])
+
+    def test_missing_and_scripted_bosses_are_not_certified(self):
+        report=summarize('[warper] boss-roster boss=Ludwig previous-attempt=no special=no\n'
+                         '[warper] boss-roster boss=Witches previous-attempt=no special=group-or-scripted\n'
+                         '[warper] boss-attempt boss=Witches result=scripted-observation-only; NOT exhaustive coverage\n')
+        self.assertEqual(report['boss_roster']['Ludwig']['status'],'not-attempted-this-session')
+        self.assertEqual(report['boss_roster']['Witches']['status'],'scripted-observation-only')

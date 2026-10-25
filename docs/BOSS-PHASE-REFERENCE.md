@@ -4,7 +4,7 @@ Researched: 25 October 2026. Target game: Bloodborne 1.09, including The Old Hun
 
 This is the encounter implementation reference, not a claim about what the current build covers. Read the relevant row before adding or changing a boss profile. Do not use one generic 60%/30% sequence for every boss.
 
-Scope: all 17 main-game bosses, all five DLC bosses, and the Chalice-only boss families and major variants listed below. Repeated dungeon encounters are cross-referenced rather than counted as new species. Unused/cut-content bosses and arbitrary edited-dungeon encounters are outside scope.
+Scope: all 17 main-game bosses and all five DLC bosses. Chalice bosses/dungeons and unused/cut content are explicitly out of scope at the user's request.
 
 ## Interpretation and evidence
 
@@ -47,35 +47,6 @@ Scope: all 17 main-game bosses, all five DLC bosses, and the Chalice-only boss f
 | Lady Maria | Three stages: ordinary weapons; blood-extended weapons below ~60%; fire-enhanced blood attacks below ~30%. | Opening interaction, normal moveset, blood transformation/explosion and trails, final aerial burst/fire trails. | [Detailed guide](https://www.bloodborne-wiki.com/2015/11/lady-maria-of-astral-clocktower.html). Do not guess 70% from memory; reference uses 60%. |
 | Orphan of Kos | Two main phases; transformation below ~50%. | Opening cinematic, first-form attacks/projectiles, winged transformation, aerial/projectile attacks and lightning waves. | [Detailed challenge guide](https://www.bloodborne-wiki.com/p/challenge-runs.html). Exact event/animation verification is still needed in the port; no third phase established. |
 
-## Chalice bosses and variants
-
-These are research rows, not implemented tour destinations. [Boss/dungeon roster](https://www.bloodborne-wiki.com/p/bosses.html) establishes their encounter placement. Depth, layer, curses and NG-like multipliers change absolute HP; use verified max HP for that instance, not a copied story-mode number.
-
-| Boss / variant | Phase or state progression | Coverage targets and unresolved details | Source |
-|---|---|---|---|
-| Undead Giant — twin curved blades | Two stages; transition around 50%. | Roaring shockwave, walking thrust, injured limbs and boil break. | [Guide](https://www.bloodborne-wiki.com/2015/03/undead-giant.html) |
-| Undead Giant — club/hook/chains | Second stage below ~50%. | Chain Cyclone in both directions, slam shockwave, extended combos. | [Guide](https://www.bloodborne-wiki.com/2015/07/undead-giant-club-and-hook.html) |
-| Undead Giant — hatchet/cannon | Variant-specific attack coverage; a distinct numeric phase trigger was not established in reviewed material. | Cannon projectile/explosion, close melee and roar/slam; do not inherit the other variants' 50% rule without checking AI. | [Guide](https://www.bloodborne-wiki.com/2015/08/undead-giant-hatchet-and-cannon.html) |
-| Merciless Watchers / Chieftain | No separate HP-phase progression established. Multiple actors and weapon variants. | Melee weapons, firearm Watcher, each body and group fight. | [Guide](https://www.bloodborne-wiki.com/2015/10/merciless-watchers-watcher-chieftain.html) |
-| Watchdog of the Old Lords | Three described stages: expanded attacks at ~70%; large explosion/final stage at ~40%. Head/limb breaks are additional states. | Flame waves, charge, lava, armour breaks, roar and large explosion. | [Guide](https://www.bloodborne-wiki.com/2015/03/ancient-guard-dog.html) |
-| Beast-possessed Soul | No numeric HP-phase progression established from reviewed source. | Fire attacks, close attacks and grab; distinguish boss from roaming enemy context. | [Guide](https://www.bloodborne-wiki.com/2015/03/beast-possessed-soul.html) |
-| Keeper of the Old Lords | Flame-weapon stage below ~70%. | Base melee/casting, weapon ignition and fire-wave slashes. | [Guide](https://www.bloodborne-wiki.com/2015/03/keeper-of-old-lords.html) |
-| Pthumerian Descendant | Dual-sickle stage below ~50%. | Weapon split, single/double thrown sickles, aerial attacks and close combos. | [Guide](https://www.bloodborne-wiki.com/2015/03/pthumerian-descendant.html) |
-| Pthumerian Elder | Two described stages; exact HP trigger unresolved in the reviewed source. | Transforming flame weapon, ranged crossbow, teleportation, fireball rain and ground skewers. Must resolve trigger from AI/event data before authoring a percentage. | [Guide](https://www.bloodborne-wiki.com/2015/03/pthumerian-elder.html) |
-| Bloodletting Beast — headed | Two described stages; exact numeric trigger unresolved here. | Limb damage/repair, roar and expanded combos. | [Guide](https://www.bloodborne-wiki.com/2015/03/bloodletting-beast.html) |
-| Bloodletting Beast — headless/parasite | Separate variant with parasite projectiles; parasite emerges as a head in the second stage. Numeric trigger unresolved here. | Parasite swarm before emergence, emergence itself, parasite bites and expanded combos. Must not substitute the headed variant's assets. | [Same guide, variant notes](https://www.bloodborne-wiki.com/2015/03/bloodletting-beast.html) |
-| Yharnam, Pthumerian Queen | Three described stages: cuffs break/dagger around 80%; blood-extended dagger around 50%. | Blood projectiles, restraint effects, clones, cuffs, dagger, poison blood weapon and ground blood attacks. | [Guide](https://www.bloodborne-wiki.com/2015/04/yharnam-pthumerian-queen.html) |
-| Forgotten Madman + Madman's Escort | Multi-actor encounter; precise escort-arrival trigger unresolved in this review. | Both hunters and their weapon/tool effects; arrival must be observed, not inferred from a generic HP level. | [Guide](https://www.bloodborne-wiki.com/2015/04/forgotten-madman.html) |
-| Abhorrent Beast | Three described stages: electrical enhancement around 80%; stronger electrical attacks around 50%. | Base punches, wind blast, enhanced lightning and multiple Storm Hammer variants. | [Guide](https://www.bloodborne-wiki.com/2015/03/abhorrent-beast.html) |
-| Loran Silverbeast | Torch and beast stances are documented; exact boss-instance health/stance trigger unresolved here. | Both applicable stances, electricity, lunges and parasite attacks. Do not assume the roaming torch variant equals the boss variant. | [Guide](https://www.bloodborne-wiki.com/2015/06/loran-silverbeast.html) |
-| Loran Darkbeast | Paarl-family charged/discharged states and enhanced electricity; verify variant trigger rather than assuming identical tuning. | Dungeon arena/material context, limb discharge/recharge, sparks and electrical blasts. | [Paarl/Loran guide](https://www.bloodborne-wiki.com/2015/02/darkbeast-paarl.html) |
-| Brainsucker | No separate HP-phase progression established. | Binding magic, expanded-head grabs and Insight drain; boss-room materials/context remain distinct. | [Guide](https://www.bloodborne-wiki.com/2015/04/brainsucker.html) |
-| Maneater Boar | No separate HP-phase progression established. | Charge, melee, rear attacks and applicable status effects/variant assets. | [Guide](https://www.bloodborne-wiki.com/2015/03/maneater-boar.html) |
-
-### Main-game bosses repeated in Chalices
-
-Blood-starved Beast, Rom, Amygdala, Celestial Emissary and Ebrietas also require their dungeon instances. Start from their researched behaviour above, but separately validate encounter activation, tuning and arena context. A main-game cache pass does not certify dungeon-specific materials, lighting, geometry or all dungeon variants. Root layouts, curses and edited dungeons are further contexts, not automatically new boss phases.
-
 ## How this changes our implementation
 
 1. Replace generic “lower-health” assumptions with boss-specific authored states and source links. **Do not call 60% Ebrietas phase 2**; her documented boundary is ~50%. A proposed sample at 45% would cross it, but that sample is our choice, not the boundary.
@@ -84,7 +55,7 @@ Blood-starved Beast, Rom, Amygdala, Celestial Emissary and Ebrietas also require
 4. Do not attack during a transition that we want to render. Do not advance just because a timer or HP readback succeeded. Prefer supported event/state/animation identifiers; otherwise report “requested, unconfirmed,” with a bounded timeout.
 5. Resolve missing actors and saved encounter flags first. A completed lamp warp cannot recreate a defeated or disabled boss by itself.
 6. Group bosses, shared bars, deaths/revivals, replacements and scripted chases need bespoke controllers. The current single-target never-kill routine does not cover these mechanics.
-7. Use the true instance maximum HP once the correct field/parameter is verified. Current code uses starting observed HP: that can be wrong if an encounter is already damaged.
+7. Use the true instance maximum HP once the correct field/parameter is verified. The revised build reads maximum HP at damage-module +0xfc and refuses invalid values rather than treating starting HP as maximum.
 8. Keep the disposable save reset and online disabled. Do not lower HP in the user's real playthrough. Do not claim all shader compilation is complete from a few pipeline counters.
 
 ## Project evidence versus research
@@ -98,13 +69,12 @@ Blood-starved Beast, Rom, Amygdala, Celestial Emissary and Ebrietas also require
 | Celestial Emissary | Loaded/alive observed; staged growth/tendril coverage not implemented/verified. |
 | Missing bosses | User did not see Gascoigne or Ludwig; phase knowledge does not resolve absent-actor/save-state issues. |
 | Cinematics | Entrance cinematics seen for Logarius, Wet Nurse, Laurence and Orphan. Explicit cinematic-clock suspension was added; this does not verify later boss phases. |
-| Current generic batch | Still uses 60%/30% starting-HP samples. This document identifies required corrections; creating it does not silently change the binary or certify the batch. |
+| Revised full-roster batch | Uses sourced per-boss thresholds with samples 5 percentage points below each boundary, instance maximum HP, ranged/close stages and quiet transition holds. The 22-boss roster is tracked; missing actors and scripted/group observations are not certified as covered. |
 
 ## Unresolved research tasks owned by development, not the tester
 
-- Verify numeric triggers and phase/transition identifiers against 1.09 event/AI data, especially Gascoigne's weapon switch and unresolved Chalice thresholds.
-- Determine a reliable maximum-HP source and shared-boss-bar handling.
-- Resolve the headless Bloodletting Beast's emergence trigger, Elder threshold, escort arrival and boss Silverbeast stance rules.
+- Verify numeric triggers and phase/transition identifiers against 1.09 event/AI data, especially Gascoigne's weapon switch.
+- Maximum HP is now read from damage-module +0xfc, documented in the pinned reference party_balance.cpp:16. Shared-boss-bar handling remains unresolved.
 - Map attack/transition animation IDs to named actions; raw new IDs include idle, locomotion, hit reactions and non-attack transitions.
 - Determine which transitions require actual damage events rather than raw HP assignment.
 - Validate actor replacement, arena floor/collision checks and camera visibility before generalising proximity placement to more bosses.

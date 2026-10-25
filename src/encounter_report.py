@@ -4,6 +4,7 @@ import re
 from pathlib import Path
 
 PREFIXES = ('boss-run ', 'boss-stage ', 'boss-stage-result ', 'boss-animation-ids ',
+            'boss-roster ', 'boss-attempt ', 'boss-stop ',
             'compilation evidence:', 'cutscene ', 'skipped lamp ', 'area ', 'lamp tour finished')
 
 def summarize(log_text):
@@ -23,10 +24,19 @@ def summarize(log_text):
             if key in fields:
                 fields[key] = int(fields[key])
         results.append(fields)
+    roster={}
+    for message in events:
+        fields=dict(re.findall(r'(boss|previous-attempt|special|result)=([^ ;]+)',message))
+        if message.startswith('boss-roster ') and 'boss' in fields:
+            roster.setdefault(fields['boss'],{'status':'not-attempted-this-session'})
+            if fields.get('previous-attempt')=='yes' and roster[fields['boss']]['status']=='not-attempted-this-session':
+                roster[fields['boss']]['status']='attempted-in-previous-session-not-certified'
+        elif message.startswith('boss-attempt ') and 'boss' in fields:
+            roster[fields['boss']]={'status':fields.get('result','unknown')}
     return {'scope': 'this log session, including automatic retries',
             'coverage_warning': 'HP values, loaded entities and animation IDs do not prove boss phases, specific attacks or exhaustive shader coverage.',
             'tour_finished': any(e.startswith('lamp tour finished') for e in events),
-            'stage_results': results, 'events': events}
+            'boss_roster':roster, 'stage_results': results, 'events': events}
 
 def write_report(log_path, output_path):
     report = summarize(Path(log_path).read_text(encoding='utf-8', errors='replace'))
