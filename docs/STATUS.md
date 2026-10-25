@@ -18,6 +18,13 @@ The save is not redistributed: its author explicitly prohibits reuploads.
   toward it. The follow-up full boss run confirmed activation and phase event 12414707.
 - The new executable runs with the regular v1.9.4 installation's DLLs. Embedded
   launcher Python also successfully loaded the portable setup script.
+- The extracted portable package passed a clean first-time ZIP import/setup check.
+  Console prompts are handled by PowerShell, not the frozen launcher's absent stdin.
+- The full boss run confirmed Gascoigne's beast event 12414807, both BSB phase
+  events 12304807/12304808, and Amelia's phase event 12404807. The axe-extension
+  window remains observational, not an independently certified event.
+- 39 Python tests, seven native movement/encounter/evidence programs, the native
+  image test and hook compilation pass, including the GitHub Ubuntu CI run.
 - Full boss/phase validation is continuing. Older failure reports below are
   retained as history; do not infer every remaining phase has been fixed.
 

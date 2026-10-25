@@ -48,6 +48,9 @@ Gehrman, Moon Presence and Chalice bosses are not covered.
   `bin` folder. This add-on deliberately reuses those runtime libraries.
 - Unsupported save ZIP: use the exact original download linked above. Setup checks
   both gameplay files against known hashes before importing anything.
+- To check setup without starting the game, run `powershell -NoProfile
+  -ExecutionPolicy Bypass -File .\Start-WorldWarper.ps1 -SetupOnly` in the extracted
+  folder. All prompts stay in the command window, not the game launcher.
 - Online play is disabled **only for the automated tour**. Normal launcher settings
   and personal saves are not changed.
 

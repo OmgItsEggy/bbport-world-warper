@@ -70,12 +70,15 @@ def main():
     parser.add_argument('--save-zip', type=Path)
     parser.add_argument('--mode', choices=('full', 'entry-check', 'all-lamps', 'bosses'))
     parser.add_argument('--check', action='store_true', help='Validate setup without launching the game')
+    parser.add_argument('--no-prompt', action='store_true', help='All console prompts are handled by the PowerShell launcher')
     args = parser.parse_args()
     settings_path = ROOT / 'settings.json'
     settings = json.loads(settings_path.read_text()) if settings_path.exists() else {}
     install = args.install.resolve()
     game = args.game or (Path(settings['game']) if settings.get('game') else None)
     if not game:
+        if args.no_prompt:
+            raise ValueError('A game-data folder is required. Rerun Start-WorldWarper.cmd.')
         game = ask_path('Paste your Bloodborne game-data folder (contains eboot.bin and dvdroot_ps4)')
     game = game.resolve()
     required = [install / 'Bloodborne.exe', install / 'out/boot-linked.bin',
@@ -88,6 +91,8 @@ def main():
     if not check_seed(seed):
         print('Download EonaCatNL\'s original 100-percent save ZIP once:\n' + SAVE_URL)
         print('Its author forbids reuploads, so the save is imported locally, not redistributed.')
+        if not args.save_zip and args.no_prompt:
+            raise ValueError('The test seed is missing or invalid. Extract into a new folder and rerun setup with the original ZIP.')
         archive = args.save_zip or ask_path('Paste the downloaded ZIP path (do not install it over your own save)')
         import_save(archive, seed)
     settings_path.write_text(json.dumps({'install': str(install), 'game': str(game)}, indent=2))
@@ -97,13 +102,15 @@ def main():
         return 0
     mode = args.mode
     if not mode:
+        if args.no_prompt:
+            raise ValueError('Choose a tour mode in Start-WorldWarper.cmd.')
         print('\n1: FULL warm-up: equipment + 44 lanterns + boss/phase batch\n2: Four-boss entrance diagnostic\n3: Boss/phase batch only\n4: Equipment + lanterns only')
         choice = input('Choose 1, 2, 3 or 4 [1]: ').strip() or '1'
         if choice not in ('1', '2', '3', '4'):
             raise ValueError('Choose 1, 2, 3 or 4; no game was launched.')
         mode = {'1': 'full', '2': 'entry-check', '3': 'bosses', '4': 'all-lamps'}[choice]
     print('Leave the game controls alone. The tour loads Continue and exits automatically.')
-    print('Close the game window to stop early. Next launch starts with a clean test save.')
+    print('To cancel the whole job, close the command window, then the game window. Each launch resets the test save.')
     arguments = ['--install', str(install), '--game', str(game),
                  '--probe', str(ROOT / 'bin/bb-probe.exe'), '--runtime-bin', str(install / 'bin')]
     if mode == 'full':
